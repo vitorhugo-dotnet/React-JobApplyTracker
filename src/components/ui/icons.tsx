@@ -109,6 +109,14 @@ export const CollapseIcon = (p: IconProps) => (
   </svg>
 )
 
+export const CoffeeIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M2 4.5H11V8.5A4 4 0 017 12.5H6A4 4 0 012 8.5V4.5Z" stroke="currentColor" strokeLinejoin="round" />
+    <path d="M11 6H12A2 2 0 0112 10H10.5" stroke="currentColor" strokeLinecap="round" />
+    <path d="M4.5 1.5V3M7 1.5V3M9.5 1.5V3" stroke="currentColor" strokeLinecap="round" />
+  </svg>
+)
+
 /* ---- sidebar nav icons ---- */
 export const DashboardIcon = (p: IconProps) => (
   <svg {...base(p)}>
