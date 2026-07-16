@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { CoffeeIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
+import { BUY_ME_A_COFFEE_URL } from './externalLinks'
 import { NAV_ITEMS } from './navigation'
 
 export function MobileNav() {
@@ -18,6 +20,19 @@ export function MobileNav() {
       <div className="fixed bottom-5 right-5 z-50 flex flex-col-reverse items-end gap-2.5">
         {open && (
           <div className="flex flex-col-reverse gap-2">
+            <a
+              href={BUY_ME_A_COFFEE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-full border border-mono-e5 bg-mono-w px-3.5 py-2 text-[13px] text-mono-1 shadow-lg transition-colors hover:bg-mono-f5"
+            >
+              <span className="grid h-4 w-4 shrink-0 place-items-center">
+                <CoffeeIcon size={14} />
+              </span>
+              Buy me a coffee
+            </a>
+
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon
               return (

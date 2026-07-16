@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { CollapseIcon, SearchIcon } from '@/components/ui/icons'
+import { CoffeeIcon, CollapseIcon, SearchIcon } from '@/components/ui/icons'
 import { toggleTheme } from '@/lib/theme'
 import { useAuthStore } from '@/store/authStore'
+import { BUY_ME_A_COFFEE_URL } from './externalLinks'
 
 interface TopbarProps {
   root: string
@@ -90,6 +91,18 @@ export function Topbar({ root, leaf, onToggleSidebar }: TopbarProps) {
             ⌘K
           </span>
         </label>
+
+        {/* support — desktop only */}
+        <a
+          href={BUY_ME_A_COFFEE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Buy me a coffee"
+          aria-label="Buy me a coffee"
+          className="hidden h-[30px] w-[30px] place-items-center rounded border border-mono-e5 bg-mono-w text-mono-5 transition-colors hover:bg-mono-f5 hover:text-mono-1 md:grid"
+        >
+          <CoffeeIcon />
+        </a>
 
         {/* dark / light mode toggle */}
         <button
