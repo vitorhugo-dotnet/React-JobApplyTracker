@@ -14,8 +14,10 @@ import Dashboard from '@/pages/dashboard/Dashboard'
 import ApplicationsList from '@/pages/applications/ApplicationsList'
 import ApplicationForm from '@/pages/applications/ApplicationForm'
 import Metrics from '@/pages/metrics/Metrics'
+import Exports from '@/pages/exports/Exports'
 import Developer from '@/pages/developer/Developer'
 import AccountSettings from '@/pages/account/AccountSettings'
+import PrivacyPolicy from '@/pages/legal/PrivacyPolicy'
 
 export default function App() {
   useSyncReplay()
@@ -63,6 +65,7 @@ export default function App() {
       <Route path="/login" element={accessToken ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/register" element={accessToken ? <Navigate to="/dashboard" replace /> : <Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
       <Route
         element={
@@ -77,6 +80,7 @@ export default function App() {
         <Route path="/applications/new" element={<ApplicationForm />} />
         <Route path="/applications/:id/edit" element={<ApplicationForm />} />
         <Route path="/metrics" element={<Metrics />} />
+        <Route path="/exports" element={<Exports />} />
         <Route path="/developer" element={<Developer />} />
         <Route path="/account" element={<AccountSettings />} />
       </Route>

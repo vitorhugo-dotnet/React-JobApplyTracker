@@ -2,6 +2,7 @@ import { api, unwrap } from '@/lib/api'
 import type {
   Application,
   ApplicationPage,
+  ApplicationPatch,
   ApplicationQuery,
   ApplicationRequest,
   LinkMetadata,
@@ -28,8 +29,22 @@ export const updateReminder = (id: string, recruiterDmReminderEnabled: boolean) 
 export const markDmSent = (id: string) =>
   unwrap(api.patch<Application>(`/applications/${id}/mark-dm-sent`, {}))
 
-export const archiveApplication = (id: string) =>
-  unwrap(api.patch<Application>(`/applications/${id}/archive`, {}))
+/**
+ * Partial update. Send only the fields that should change — the backend keeps
+ * the stored value for every key that is absent from the body, so padding the
+ * payload with untouched fields is both unnecessary and lossy.
+ *
+ * The response omits `archivedAt` entirely once it is cleared, so read it as
+ * "absent" rather than "null".
+ */
+export const patchApplication = (id: string, patch: ApplicationPatch) =>
+  unwrap(api.patch<Application>(`/applications/${id}`, patch))
+
+/** Move an application into the archive. Its status is left untouched. */
+export const archiveApplication = (id: string) => patchApplication(id, { archived: true })
+
+/** Bring an archived application back to the active list, status unchanged. */
+export const restoreApplication = (id: string) => patchApplication(id, { archived: false })
 
 export const deleteApplication = (id: string) =>
   unwrap(api.delete(`/applications/${id}`))
@@ -42,3 +57,6 @@ export const getOverdue = () =>
 
 export const getLinkMetadata = (url: string) =>
   unwrap(api.get<LinkMetadata>('/applications/link-metadata', { params: { url } }))
+
+export const getStatuses = () =>
+  unwrap(api.get<string[]>('/applications/statuses'))

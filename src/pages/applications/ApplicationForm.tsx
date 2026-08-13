@@ -8,11 +8,12 @@ import { Switch, Checkbox, ToggleRow } from '@/components/ui/Toggle'
 import { Dialog } from '@/components/ui/Dialog'
 import { CenteredSpinner, ErrorNote, Spinner } from '@/components/ui/feedback'
 import { useAsync } from '@/hooks/useAsync'
-import { toDateInputValue } from '@/lib/format'
-import { APPLICATION_STATUSES, TO_SEND_LATER_STATUS, type ApplicationRequest } from '@/types'
+import { formatDateTime, toApiDate, toDateInputValue } from '@/lib/format'
+import { type ApplicationRequest } from '@/types'
 import {
   createApplication,
   getApplication,
+  getStatuses,
   markDmSent,
   updateApplication,
 } from '@/api/applications'
@@ -31,6 +32,7 @@ interface FormValues {
   baseResumeId: string
   toSendLater: boolean
   markDmSent: boolean
+  interviewCount: number
 }
 
 const EMPTY: FormValues = {
@@ -46,6 +48,7 @@ const EMPTY: FormValues = {
   baseResumeId: '',
   toSendLater: false,
   markDmSent: false,
+  interviewCount: 0,
 }
 
 function buildRequest(
@@ -62,13 +65,14 @@ function buildRequest(
     recruiterName: values.recruiterName.trim() || undefined,
     organization: values.organization.trim() || undefined,
     vacancyLink: values.vacancyLink.trim() || undefined,
-    status: values.toSendLater ? TO_SEND_LATER_STATUS : values.status,
-    applicationDate: values.applicationDate || null,
+    status: values.toSendLater ? null : values.status,
+    applicationDate: toApiDate(values.applicationDate),
     nextStepDateTime: nextStep,
     note: values.note.trim() || undefined,
     interviewScheduled,
     recruiterDmReminderEnabled: reminderEnabled,
     rhAcceptedConnection,
+    interviewCount: values.interviewCount,
   }
 }
 
@@ -106,6 +110,12 @@ export default function ApplicationForm() {
     'Could not load resumes.',
   )
 
+  const statuses = useAsync(
+    () => getStatuses(),
+    [],
+    'Could not load status options.',
+  )
+
   // hydrate the form once the application loads
   useEffect(() => {
     const app = existing.data
@@ -117,14 +127,15 @@ export default function ApplicationForm() {
       recruiterName: app.recruiterName ?? '',
       organization: app.organization ?? '',
       vacancyLink: app.vacancyLink ?? '',
-      status: app.status === TO_SEND_LATER_STATUS ? 'RH' : app.status ?? 'RH',
-      applicationDate: toDateInputValue(app.applicationDate),
+      status: app.toSendLater ? (statuses.data?.[0] ?? 'RH') : (app.status ?? statuses.data?.[0] ?? 'RH'),
+      applicationDate: app.toSendLater ? '' : toDateInputValue(app.applicationDate),
       nextStepDate: next ? `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}` : '',
       nextStepTime: next ? `${pad(next.getHours())}:${pad(next.getMinutes())}` : '',
       note: app.note ?? '',
       baseResumeId: '',
-      toSendLater: app.status === TO_SEND_LATER_STATUS,
+      toSendLater: app.toSendLater ?? !app.applicationDate,
       markDmSent: !!app.recruiterDmSentAt,
+      interviewCount: app.interviewCount ?? 0,
     })
     setReminderEnabled(app.recruiterDmReminderEnabled ?? true)
     setInterviewScheduled(app.interviewScheduled ?? false)
@@ -205,17 +216,33 @@ export default function ApplicationForm() {
             <Input id="vacancyLink" className="mono" placeholder="https://…" {...register('vacancyLink')} />
           </Field>
 
-          <Field label="Status" htmlFor="status">
-            <Select id="status" disabled={toSendLater} {...register('status')}>
-              {APPLICATION_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </Select>
+          <Field
+            label="Status"
+            htmlFor="status"
+            error={statuses.error ?? undefined}
+          >
+            {statuses.loading ? (
+              <div className="flex items-center gap-2 py-2 text-xs text-mono-9">
+                <Spinner />
+                Loading statuses…
+              </div>
+            ) : (
+              <Select id="status" disabled={toSendLater} {...register('status')}>
+                {(statuses.data ?? []).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </Select>
+            )}
           </Field>
           <Field label="Application Date" htmlFor="applicationDate">
-            <Input id="applicationDate" type="date" {...register('applicationDate')} />
+            <Input
+              id="applicationDate"
+              type="date"
+              disabled={toSendLater}
+              {...register('applicationDate')}
+            />
           </Field>
 
           <Field label="Next Step — Date" htmlFor="nextStepDate">
@@ -223,6 +250,15 @@ export default function ApplicationForm() {
           </Field>
           <Field label="Next Step — Time" htmlFor="nextStepTime">
             <Input id="nextStepTime" className="mono" type="time" {...register('nextStepTime')} />
+          </Field>
+
+          <Field label="Interviews" htmlFor="interviewCount" hint="how many interviews you've had">
+            <Input
+              id="interviewCount"
+              type="number"
+              min={0}
+              {...register('interviewCount', { valueAsNumber: true, min: 0 })}
+            />
           </Field>
 
           <Field label="Note" full htmlFor="note">
@@ -241,6 +277,30 @@ export default function ApplicationForm() {
             </Select>
           </Field>
         </div>
+
+        {isEdit && (existing.data?.driveResumeDocumentUrl || existing.data?.driveResumeFileId) && (
+          <div className="mt-5 rounded border border-mono-e5 border-l-[3px] border-l-mono-2 bg-[#fafaf7] px-3.5 py-3">
+            <div className="mb-1 text-[11px] uppercase tracking-wide text-mono-9">Generated CV</div>
+            <div className="text-[13px] text-mono-2">
+              {existing.data?.driveResumeFileName ?? 'Generated resume'}
+            </div>
+            {existing.data?.driveResumeGeneratedAt && (
+              <div className="mt-0.5 text-xs text-mono-9">
+                Generated {formatDateTime(existing.data.driveResumeGeneratedAt)}
+              </div>
+            )}
+            {existing.data?.driveResumeDocumentUrl && (
+              <a
+                href={existing.data.driveResumeDocumentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-block text-[13px] text-mono-2 underline underline-offset-2 hover:text-mono-0"
+              >
+                Open in Google Docs ↗
+              </a>
+            )}
+          </div>
+        )}
 
         <div className="mt-5 border-t border-mono-e5">
           <ToggleRow title="Recruiter Accepted Connection" sub="The recruiter accepted my LinkedIn connection request">
@@ -261,7 +321,13 @@ export default function ApplicationForm() {
             <Switch
               aria-label="To send later"
               checked={toSendLater}
-              onChange={(v) => setValue('toSendLater', v, { shouldDirty: true })}
+              onChange={(v) => {
+                setValue('toSendLater', v, { shouldDirty: true })
+                if (v) {
+                  setValue('applicationDate', '', { shouldDirty: true })
+                  setValue('status', '', { shouldDirty: true })
+                }
+              }}
             />
           </ToggleRow>
           <ToggleRow title="Mark DM Sent" sub="I've already messaged the recruiter directly">

@@ -50,7 +50,7 @@ export default function Metrics() {
         getDashboardSummary(),
         getApplications({ archived: false, size: 500 }),
       ])
-      return { summary, apps: page.content }
+      return { summary, apps: page.applications ?? [] }
     },
     [],
     'Could not load metrics.',
@@ -67,17 +67,20 @@ export default function Metrics() {
     for (const app of apps) counts[familyOf(app.status)] += 1
 
     const statusCounts: Record<string, number> = {}
-    for (const app of apps) statusCounts[app.status] = (statusCounts[app.status] || 0) + 1
+    for (const app of apps) {
+      const s = app.status ?? 'To Send Later'
+      statusCounts[s] = (statusCounts[s] || 0) + 1
+    }
 
     const total = apps.length
     const reached = (...fams: string[]) => fams.reduce((sum, f) => sum + (counts[f] || 0), 0)
 
     const funnel = [
       { label: 'Applications', value: total },
-      { label: 'Applied (RH)', value: total - counts.draft },
-      { label: 'Interviewed', value: reached('replied', 'interview', 'offer') },
+      { label: 'Applied', value: total - counts.draft },
+      { label: 'Interview', value: reached('replied', 'interview', 'offer') },
       { label: 'Tech Test', value: reached('interview', 'offer') },
-      { label: 'Negotiation', value: counts.offer },
+      { label: 'Offer', value: counts.offer },
     ]
 
     const byStatus: Bar[] = STATUS_DISPLAY_ORDER

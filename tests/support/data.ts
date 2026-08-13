@@ -13,6 +13,7 @@ export const MOCK_USER: User = {
   reminderTime: '09:00',
   roles: ['USER'],
   canUseGoogleIntegration: true,
+  privacyPolicyAccepted: true,
 }
 
 export const MOCK_PROFILE: GamificationProfile = {
@@ -58,16 +59,16 @@ const day = (offset: number) => {
 
 export function seedApplications(): Application[] {
   return [
-    mk('app-1', 'Senior Frontend Engineer', 'Linear', 'Priya Nayar', 'Teste Técnico', -7, 2, true),
+    mk('app-1', 'Senior Frontend Engineer', 'Linear', 'Priya Nayar', 'Technical Test', -7, 2, true),
     mk('app-2', 'Product Designer, Growth', 'Vercel', 'Marcus Webb', 'RH', -5, -6, false),
-    mk('app-3', 'Full-stack Developer', 'Supabase', 'Dana Klein', 'Fiz a RH - Aguardando Atualização', -9, -1, true),
-    mk('app-4', 'Design Engineer', 'Raycast', 'Tom Asante', 'RH (Negociação)', -21, 5, true),
-    mk('app-5', 'Frontend Engineer II', 'Retool', 'Lena Ortiz', 'Rejeitado', -26, null, false),
+    mk('app-3', 'Full-stack Developer', 'Supabase', 'Dana Klein', 'Pending HR Response', -9, -1, true),
+    mk('app-4', 'Design Engineer', 'Raycast', 'Tom Asante', 'Offer Negotiation', -21, 5, true),
+    mk('app-5', 'Frontend Engineer II', 'Retool', 'Lena Ortiz', 'Rejected', -26, null, false),
     mk('app-6', 'UX Engineer', 'Notion', 'Sam Cho', 'RH', -3, 3, false),
-    mk('app-7', 'Staff Product Designer', 'Stripe', 'Grace Liu', 'Teste Técnico', -13, 1, true),
-    mk('app-8', 'Web Platform Engineer', 'Framer', 'Ivan Petrov', 'TO_SEND_LATER', null, null, true),
-    mk('app-9', 'Senior UI Engineer', 'Figma', 'Noor Hassan', 'Fiz a Hiring Manager - Aguardando Atualização', -4, 2, false),
-    mk('app-10', 'Frontend Developer', 'Cron', 'Beth Owens', 'TO_SEND_LATER', null, null, false),
+    mk('app-7', 'Staff Product Designer', 'Stripe', 'Grace Liu', 'Technical Test', -13, 1, true),
+    mk('app-8', 'Web Platform Engineer', 'Framer', 'Ivan Petrov', null, null, null, true),
+    mk('app-9', 'Senior UI Engineer', 'Figma', 'Noor Hassan', 'Pending Hiring Manager Response', -4, 2, false),
+    mk('app-10', 'Frontend Developer', 'Cron', 'Beth Owens', null, null, null, false),
     mk('app-11', 'Motion Designer', 'Rive', 'Carlos Mendez', 'RH', -8, -3, true),
     mk('app-12', 'Design Systems Lead', 'GitHub', 'Amy Tran', 'Ghosting', -35, null, false),
   ]
@@ -77,7 +78,7 @@ export function seedApplications(): Application[] {
     vacancyName: string,
     organization: string,
     recruiterName: string,
-    status: string,
+    status: string | null,
     appliedOffset: number | null,
     nextOffset: number | null,
     note: boolean,
@@ -90,7 +91,8 @@ export function seedApplications(): Application[] {
       vacancyLink: `https://jobs.example.com/${id}`,
       applicationDate: appliedOffset === null ? null : day(appliedOffset),
       nextStepDateTime: nextOffset === null ? null : day(nextOffset),
-      status,
+      status: status ?? null,
+      toSendLater: status === null,
       // interviewScheduled is now an independent flag; app-1 is the seeded example.
       interviewScheduled: id === 'app-1',
       recruiterDmReminderEnabled: true,
@@ -108,7 +110,7 @@ export const ARCHIVED_APP: Application = {
   vacancyName: 'Platform Engineer',
   organization: 'Render',
   recruiterName: 'Old Recruiter',
-  status: 'Rejeitado',
+  status: 'Rejected',
   applicationDate: day(-90),
   nextStepDateTime: null,
   archived: true,

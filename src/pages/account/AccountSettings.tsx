@@ -12,14 +12,18 @@ import {
   getGoogleDriveStatus,
   getBaseResumes,
   createBaseResume,
-  updateBaseResume,
   deleteBaseResume,
+  getBaseInformation,
+  createBaseInformation,
+  deleteBaseInformation,
   updateRootFolder,
+  startGoogleDriveOAuth,
+  disconnectGoogleDrive,
   type GoogleDriveStatus,
 } from '@/api/resumes'
 import { getPasskeyStatus, registerPasskey, isPasskeySupported } from '@/api/passkey'
 import { useAuthStore } from '@/store/authStore'
-import type { BaseResume } from '@/types'
+import type { BaseResume, BaseInformation } from '@/types'
 
 function SetCard({
   title,
@@ -184,25 +188,28 @@ function ResumeManager() {
     () => getBaseResumes().catch(() => []),
     [],
   )
-  const [name, setName] = useState('')
+  const [docInput, setDocInput] = useState('')
+  const [language, setLanguage] = useState('')
   const [isTemplate, setIsTemplate] = useState(false)
   const [adding, setAdding] = useState(false)
-  const [editId, setEditId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const [editTemplate, setEditTemplate] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleAdd = async () => {
-    if (!name.trim()) return
+    if (!docInput.trim()) return
     setAdding(true)
     setError(null)
     try {
-      await createBaseResume({ name: name.trim(), template: isTemplate })
-      setName('')
+      await createBaseResume({
+        documentIdOrUrl: docInput.trim(),
+        language: language.trim() || undefined,
+        template: isTemplate,
+      })
+      setDocInput('')
+      setLanguage('')
       setIsTemplate(false)
       reload()
     } catch {
-      setError('Could not add resume.')
+      setError('Could not add resume. Make sure the Google Docs link or ID is valid.')
     } finally {
       setAdding(false)
     }
@@ -215,24 +222,6 @@ function ResumeManager() {
       reload()
     } catch {
       setError('Could not delete resume.')
-    }
-  }
-
-  const startEdit = (r: BaseResume) => {
-    setEditId(r.id)
-    setEditName(r.name)
-    setEditTemplate(r.template ?? false)
-  }
-
-  const handleUpdate = async () => {
-    if (!editId) return
-    setError(null)
-    try {
-      await updateBaseResume(editId, { name: editName, template: editTemplate })
-      setEditId(null)
-      reload()
-    } catch {
-      setError('Could not update resume.')
     }
   }
 
@@ -249,17 +238,25 @@ function ResumeManager() {
       {/* Add form */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <input
-          className="field-input min-w-[180px] flex-1"
-          placeholder="Resume name…"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          className="field-input min-w-[220px] flex-1"
+          placeholder="Google Docs link or document ID…"
+          value={docInput}
+          onChange={(e) => setDocInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+        />
+        <input
+          className="field-input w-[88px] shrink-0"
+          placeholder="Lang"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          aria-label="Language code (e.g. EN, PT)"
         />
         <div className="flex shrink-0 items-center gap-2">
           <Switch checked={isTemplate} onChange={setIsTemplate} aria-label="Mark as template" />
           <span className="select-none text-[12.5px] text-mono-5">Template</span>
         </div>
-        <Button onClick={handleAdd} disabled={adding || !name.trim()} size="sm">
+        <Button onClick={handleAdd} disabled={adding || !docInput.trim()} size="sm">
           {adding ? <Spinner /> : '+ Add'}
         </Button>
       </div>
@@ -269,47 +266,122 @@ function ResumeManager() {
         <CenteredSpinner />
       ) : resumes && resumes.length > 0 ? (
         <div className="flex flex-col divide-y divide-mono-e5 overflow-hidden rounded border border-mono-e5">
-          {resumes.map((r) =>
-            editId === r.id ? (
-              <div key={r.id} className="flex flex-wrap items-center gap-2 px-3.5 py-2.5">
-                <input
-                  className="field-input min-w-[160px] flex-1"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  autoFocus
-                />
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <Switch checked={editTemplate} onChange={setEditTemplate} aria-label="Template" />
-                  <span className="text-[12px] text-mono-5">Template</span>
-                </div>
-                <Button size="sm" variant="primary" onClick={handleUpdate}>
-                  Save
-                </Button>
-                <Button size="sm" onClick={() => setEditId(null)}>
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <div key={r.id} className="flex items-center gap-3 px-3.5 py-2.5">
-                <div className="flex-1 truncate text-[13px] text-mono-1">{r.name}</div>
-                {r.template && (
-                  <span className="shrink-0 rounded border border-mono-e5 px-2 py-0.5 font-mono text-[11px] text-mono-9">
-                    template
-                  </span>
-                )}
-                <Button size="sm" onClick={() => startEdit(r)}>
-                  Edit
-                </Button>
-                <Button size="sm" onClick={() => handleDelete(r.id)} className="text-danger">
-                  Delete
-                </Button>
-              </div>
-            ),
-          )}
+          {resumes.map((r) => (
+            <div key={r.id} className="flex min-w-0 items-center gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 flex-1 truncate text-[13px] text-mono-1">{r.name}</div>
+              {r.language && (
+                <span className="shrink-0 rounded border border-mono-e5 px-2 py-0.5 font-mono text-[11px] uppercase text-mono-9">
+                  {r.language}
+                </span>
+              )}
+              {r.template && (
+                <span className="shrink-0 rounded border border-mono-e5 px-2 py-0.5 font-mono text-[11px] text-mono-9">
+                  template
+                </span>
+              )}
+              {r.readOnly && (
+                <span className="shrink-0 rounded border border-mono-e5 px-2 py-0.5 font-mono text-[11px] text-mono-9">
+                  read only
+                </span>
+              )}
+              <Button size="sm" className="shrink-0 text-danger" onClick={() => handleDelete(r.id)}>
+                Delete
+              </Button>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="py-3 text-center font-mono text-[11.5px] text-mono-9">
           No resumes added yet.
+        </div>
+      )}
+    </div>
+  )
+}
+
+function BaseInfoManager() {
+  const { data: docs, loading, reload } = useAsync<BaseInformation[]>(
+    () => getBaseInformation().catch(() => []),
+    [],
+  )
+  const [docInput, setDocInput] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleAdd = async () => {
+    if (!docInput.trim()) return
+    setAdding(true)
+    setError(null)
+    try {
+      await createBaseInformation({ documentIdOrUrl: docInput.trim() })
+      setDocInput('')
+      reload()
+    } catch {
+      setError('Could not add document. Make sure the Drive link or ID is a Google Doc, PDF, DOCX, or Markdown file.')
+    } finally {
+      setAdding(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    setError(null)
+    try {
+      await deleteBaseInformation(id)
+      reload()
+    } catch {
+      setError('Could not delete document.')
+    }
+  }
+
+  return (
+    <div className="mt-5 border-t border-mono-e5 pt-5">
+      <div className="mb-1 text-[13px] font-semibold">Base information about me</div>
+      <div className="mb-3 text-[12px] text-mono-9">
+        Documents (Google Docs, PDF, DOCX, or Markdown) the AI reads first to learn about you.
+      </div>
+
+      {error && (
+        <div className="mb-3">
+          <ErrorNote message={error} />
+        </div>
+      )}
+
+      {/* Add form */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <input
+          className="field-input min-w-[220px] flex-1"
+          placeholder="Drive link or file ID (Google Doc, PDF, DOCX, MD)…"
+          value={docInput}
+          onChange={(e) => setDocInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+        />
+        <Button onClick={handleAdd} disabled={adding || !docInput.trim()} size="sm">
+          {adding ? <Spinner /> : '+ Add'}
+        </Button>
+      </div>
+
+      {/* Document list */}
+      {loading ? (
+        <CenteredSpinner />
+      ) : docs && docs.length > 0 ? (
+        <div className="flex flex-col divide-y divide-mono-e5 overflow-hidden rounded border border-mono-e5">
+          {docs.map((d) => (
+            <div key={d.id} className="flex min-w-0 items-center gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 flex-1 truncate text-[13px] text-mono-1">{d.name}</div>
+              {d.docType && (
+                <span className="shrink-0 rounded border border-mono-e5 px-2 py-0.5 font-mono text-[11px] uppercase text-mono-9">
+                  {d.docType}
+                </span>
+              )}
+              <Button size="sm" className="shrink-0 text-danger" onClick={() => handleDelete(d.id)}>
+                Delete
+              </Button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="py-3 text-center font-mono text-[11.5px] text-mono-9">
+          No base information added yet.
         </div>
       )}
     </div>
@@ -326,6 +398,35 @@ function GoogleDriveSection() {
   const [folderSaving, setFolderSaving] = useState(false)
   const [folderError, setFolderError] = useState<string | null>(null)
   const [folderSaved, setFolderSaved] = useState(false)
+  const [conn, setConn] = useState(false)
+  const [connError, setConnError] = useState<string | null>(null)
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false)
+
+  const handleConnect = async () => {
+    setConn(true)
+    setConnError(null)
+    try {
+      const { authorizationUrl } = await startGoogleDriveOAuth()
+      window.location.href = authorizationUrl
+    } catch {
+      setConnError('Could not start the Google Drive connection.')
+      setConn(false)
+    }
+  }
+
+  const handleDisconnect = async () => {
+    setConfirmDisconnect(false)
+    setConn(true)
+    setConnError(null)
+    try {
+      await disconnectGoogleDrive()
+      reload()
+    } catch {
+      setConnError('Could not disconnect Google Drive.')
+    } finally {
+      setConn(false)
+    }
+  }
 
   const handleSaveFolder = async () => {
     if (!folderInput.trim()) return
@@ -346,23 +447,36 @@ function GoogleDriveSection() {
 
   return (
     <SetCard title="Google Drive" sub="Store generated resumes in your Drive">
-      <div className="flex items-center gap-3.5">
+      {connError && (
+        <div className="mb-4">
+          <ErrorNote message={connError} />
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-3.5">
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded border border-mono-e5 text-mono-5">▲</div>
-        <div className="flex-1">
-          <div className="text-[13.5px] font-medium">
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13.5px] font-medium">
             {loading ? 'Checking…' : connected ? `Connected as ${data?.email ?? 'your account'}` : 'Not connected'}
           </div>
-          <div className="mono text-xs text-mono-9">
+          <div className="mono truncate text-xs text-mono-9">
             {connected
               ? `${data?.rootFolderName ?? 'Applywell'} · ${data?.fileCount ?? 0} files`
               : 'Connect to enable resume generation'}
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-mono-e5 px-2.5 py-[3px] font-mono text-xs text-mono-2">
-          <span className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-mono-1' : 'bg-mono-c'}`} />
-          {connected ? 'Connected' : 'Offline'}
-        </span>
-        <Button size="sm">{connected ? 'Disconnect' : 'Connect'}</Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-mono-e5 px-2.5 py-[3px] font-mono text-xs text-mono-2">
+            <span className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-mono-1' : 'bg-mono-c'}`} />
+            {connected ? 'Connected' : 'Offline'}
+          </span>
+          <Button
+            size="sm"
+            onClick={connected ? () => setConfirmDisconnect(true) : handleConnect}
+            disabled={loading || conn}
+          >
+            {conn ? <Spinner /> : connected ? 'Disconnect' : 'Connect'}
+          </Button>
+        </div>
       </div>
 
       {connected && (
@@ -379,21 +493,33 @@ function GoogleDriveSection() {
           </div>
           <div className="flex items-center gap-2">
             <input
-              className="field-input flex-1"
+              className="field-input min-w-0 flex-1"
               placeholder="Paste Drive folder ID or URL…"
               value={folderInput}
               onChange={(e) => { setFolderInput(e.target.value); setFolderSaved(false) }}
               onKeyDown={(e) => e.key === 'Enter' && handleSaveFolder()}
             />
-            <Button size="sm" onClick={handleSaveFolder} disabled={folderSaving || !folderInput.trim()}>
+            <Button size="sm" className="shrink-0" onClick={handleSaveFolder} disabled={folderSaving || !folderInput.trim()}>
               {folderSaving ? <Spinner /> : 'Save'}
             </Button>
-            {folderSaved && <span className="font-mono text-[11px] text-mono-9">Saved ✓</span>}
+            {folderSaved && <span className="shrink-0 font-mono text-[11px] text-mono-9">Saved ✓</span>}
           </div>
         </div>
       )}
 
       {connected && <ResumeManager />}
+
+      {connected && <BaseInfoManager />}
+
+      <ConfirmDialog
+        open={confirmDisconnect}
+        title="Disconnect Google Drive?"
+        message="Resume generation will be disabled until you reconnect. Your registered base resumes are kept."
+        confirmLabel="Disconnect"
+        destructive
+        onConfirm={handleDisconnect}
+        onCancel={() => setConfirmDisconnect(false)}
+      />
     </SetCard>
   )
 }
@@ -436,9 +562,9 @@ function PasskeySection() {
           <ErrorNote message={error} />
         </div>
       )}
-      <div className="flex items-center gap-3 py-2.5">
-        <div className="grid h-10 w-10 place-items-center rounded border border-mono-e5 text-mono-5">⌘</div>
-        <div className="flex-1 text-[13px] text-mono-9">
+      <div className="flex flex-wrap items-center gap-3 py-2.5">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded border border-mono-e5 text-mono-5">⌘</div>
+        <div className="min-w-0 flex-1 text-[13px] text-mono-9">
           {!supported
             ? 'This browser does not support passkeys.'
             : loading
@@ -447,7 +573,7 @@ function PasskeySection() {
                 ? 'A passkey is registered for your account.'
                 : 'No passkeys registered yet.'}
         </div>
-        <Button size="sm" onClick={onAdd} disabled={!supported || busy}>
+        <Button size="sm" className="shrink-0" onClick={onAdd} disabled={!supported || busy}>
           {busy ? <Spinner /> : '+ Add a passkey'}
         </Button>
       </div>
@@ -469,8 +595,8 @@ export default function AccountSettings() {
         <GoogleDriveSection />
 
         <SetCard title="Danger Zone" sub="Irreversible and destructive actions" danger>
-          <div className="flex items-center gap-3.5">
-            <div className="flex-1">
+          <div className="flex flex-wrap items-center gap-3.5">
+            <div className="min-w-0 flex-1">
               <div className="text-[13.5px] font-medium">Delete account</div>
               <div className="text-xs text-mono-9">
                 Permanently remove your account, applications, and history.
@@ -478,7 +604,7 @@ export default function AccountSettings() {
             </div>
             <Button
               onClick={() => setConfirmDelete(true)}
-              className="border-[#d8c4c4] text-danger hover:bg-[#fcf7f7] dark:border-[#3a2020] dark:hover:bg-[#1a1010]"
+              className="shrink-0 border-[#d8c4c4] text-danger hover:bg-[#fcf7f7] dark:border-[#3a2020] dark:hover:bg-[#1a1010]"
             >
               Delete account
             </Button>

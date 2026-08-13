@@ -42,7 +42,22 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
 
 export function ErrorNote({ message }: { message: string }) {
   return (
-    <div className="rounded border border-[#e0d4d4] bg-[#fcf7f7] px-4 py-3 text-[13px] text-danger dark:border-[#3a2020] dark:bg-[#1a1010]">
+    <div
+      role="alert"
+      className="rounded border border-[#e0d4d4] bg-[#fcf7f7] px-4 py-3 text-[13px] text-danger dark:border-[#3a2020] dark:bg-[#1a1010]"
+    >
+      {message}
+    </div>
+  )
+}
+
+/** Transient confirmation for an action that already succeeded. */
+export function SuccessNote({ message }: { message: string }) {
+  return (
+    <div
+      role="status"
+      className="rounded border border-mono-e5 bg-surface-subtle px-4 py-3 text-[13px] text-mono-1"
+    >
       {message}
     </div>
   )

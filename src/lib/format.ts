@@ -9,6 +9,11 @@ function parse(value?: string | null): Date | null {
     const [y, m, d] = value.split('-').map(Number)
     return new Date(y, m - 1, d)
   }
+  // "DD/MM/YYYY" — tolerated for backwards compatibility with older payloads
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+    const [d, m, y] = value.split('/').map(Number)
+    return new Date(y, m - 1, d)
+  }
   const d = new Date(value)
   return Number.isNaN(d.getTime()) ? null : d
 }
@@ -32,6 +37,14 @@ export function formatDateTime(value?: string | null, fallback = '—'): string 
 export function toDateInputValue(value?: string | null): string {
   const d = parse(value)
   if (!d) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+/** "value" formatted as "yyyy-MM-dd" for the backend. Returns null for empty/invalid input. */
+export function toApiDate(value?: string | null): string | null {
+  const d = parse(value)
+  if (!d) return null
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }

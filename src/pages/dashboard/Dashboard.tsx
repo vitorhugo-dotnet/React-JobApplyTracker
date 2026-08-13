@@ -63,7 +63,7 @@ export default function Dashboard() {
         getDashboardSummary(),
         getOverdue().catch(() => [] as Application[]),
         getApplications({ status: TO_SEND_LATER_STATUS, size: 8 })
-          .then((p) => p.content)
+          .then((p) => p.applications ?? [])
           .catch(() => [] as Application[]),
       ])
       return { summary, overdue, toSend }
