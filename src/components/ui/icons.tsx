@@ -159,6 +159,14 @@ export const MetricsIcon = (p: IconProps) => (
   </svg>
 )
 
+export const DownloadIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <line x1="7.5" y1="1.5" x2="7.5" y2="9.5" stroke="currentColor" strokeLinecap="round" />
+    <path d="M4.5 6.5L7.5 9.5L10.5 6.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M2 11V13H13V11" stroke="currentColor" strokeLinecap="round" />
+  </svg>
+)
+
 export const SettingsIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <circle cx="7.5" cy="5" r="2.5" stroke="currentColor" />

@@ -1,5 +1,5 @@
 import type { Page, Route } from '@playwright/test'
-import type { Application } from '../../src/types'
+import type { Application, ExportExecution, ExportSchedule } from '../../src/types'
 import {
   ARCHIVED_APP,
   MOCK_ACHIEVEMENTS,
@@ -36,6 +36,8 @@ interface MockOptions {
 export async function installMockApi(page: Page, options: MockOptions = {}): Promise<void> {
   const active: Application[] = options.empty ? [] : seedApplications()
   const archived: Application[] = options.empty ? [] : [ARCHIVED_APP]
+  const schedules: ExportSchedule[] = []
+  const executions: ExportExecution[] = []
 
   const json = (route: Route, body: unknown, status = 200) =>
     route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
@@ -187,6 +189,124 @@ export async function installMockApi(page: Page, options: MockOptions = {}): Pro
     if (patchMatch && method === 'PATCH') {
       const found = active.find((a) => a.id === patchMatch[1])
       return json(route, found ?? { id: patchMatch[1] })
+    }
+
+    // ---- exports ----
+    if (path === '/exports/columns' && method === 'GET')
+      return json(route, [
+        { key: 'id', header: 'ID' },
+        { key: 'vacancyName', header: 'Vacancy' },
+        { key: 'organization', header: 'Organization' },
+        { key: 'status', header: 'Status' },
+        { key: 'note', header: 'Notes' },
+      ])
+
+    if (path === '/exports/history' && method === 'GET')
+      return json(route, {
+        executions,
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: executions.length,
+        totalPages: 1,
+      })
+
+    if (path === '/exports/applications' && method === 'POST') {
+      const body = request.postDataJSON() as { format: 'CSV' | 'XLSX' }
+      const rows = active.length
+      const fileName = `applywell-applications-2026-07-16.${body.format.toLowerCase()}`
+      executions.unshift({
+        id: `exec-${executions.length + 1}`,
+        trigger: 'MANUAL',
+        format: body.format,
+        status: 'SUCCESS',
+        startedAt: new Date().toISOString(),
+        finishedAt: new Date().toISOString(),
+        recordCount: rows,
+        truncated: false,
+        fileName,
+      })
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/octet-stream',
+        headers: {
+          'content-disposition': `attachment; filename="${fileName}"`,
+          'x-export-record-count': String(rows),
+          'x-export-truncated': 'false',
+        },
+        body: `\uFEFFVacancy,Organization\r\nStaff Engineer,ACME\r\n`,
+      })
+    }
+
+    if (path === '/export-schedules' && method === 'GET') return json(route, schedules)
+
+    if (path === '/export-schedules' && method === 'POST') {
+      const body = request.postDataJSON() as Partial<ExportSchedule>
+      const created: ExportSchedule = {
+        id: `schedule-${schedules.length + 1}`,
+        name: body.name ?? 'Untitled',
+        format: body.format ?? 'XLSX',
+        frequency: body.frequency ?? 'DAILY',
+        time: body.time ?? '20:00',
+        dayOfWeek: body.dayOfWeek ?? null,
+        dayOfMonth: body.dayOfMonth ?? null,
+        timezone: body.timezone ?? 'America/Sao_Paulo',
+        enabled: body.enabled !== false,
+        destination: body.destination ?? 'GOOGLE_DRIVE',
+        filters: body.filters ?? {},
+        columns: body.columns ?? [],
+        nextRunAt: new Date(Date.now() + 3_600_000).toISOString(),
+        lastRunAt: null,
+        running: false,
+      }
+      schedules.push(created)
+      return json(route, created, 201)
+    }
+
+    const scheduleMatch = path.match(/^\/export-schedules\/([^/]+)$/)
+    if (scheduleMatch) {
+      const idx = schedules.findIndex((s) => s.id === scheduleMatch[1])
+      if (method === 'PUT') {
+        const body = request.postDataJSON() as Partial<ExportSchedule>
+        if (idx >= 0) schedules[idx] = { ...schedules[idx], ...body }
+        return json(route, schedules[idx])
+      }
+      if (method === 'DELETE') {
+        if (idx >= 0) schedules.splice(idx, 1)
+        return json(route, { message: 'Export schedule deleted successfully' })
+      }
+      if (method === 'GET' && idx >= 0) return json(route, schedules[idx])
+    }
+
+    const enabledMatch = path.match(/^\/export-schedules\/([^/]+)\/enabled$/)
+    if (enabledMatch && method === 'PATCH') {
+      const body = request.postDataJSON() as { enabled: boolean }
+      const idx = schedules.findIndex((s) => s.id === enabledMatch[1])
+      if (idx >= 0) {
+        schedules[idx] = {
+          ...schedules[idx],
+          enabled: body.enabled,
+          nextRunAt: body.enabled ? new Date(Date.now() + 3_600_000).toISOString() : null,
+        }
+        return json(route, schedules[idx])
+      }
+    }
+
+    const runNowMatch = path.match(/^\/export-schedules\/([^/]+)\/run-now$/)
+    if (runNowMatch && method === 'POST') {
+      const schedule = schedules.find((s) => s.id === runNowMatch[1])
+      const execution: ExportExecution = {
+        id: `exec-${executions.length + 1}`,
+        scheduleId: schedule?.id ?? null,
+        scheduleName: schedule?.name ?? null,
+        trigger: 'RUN_NOW',
+        format: schedule?.format ?? 'XLSX',
+        destination: 'GOOGLE_DRIVE',
+        status: 'PENDING',
+        startedAt: new Date().toISOString(),
+        truncated: false,
+      }
+      executions.unshift(execution)
+      return json(route, execution, 202)
     }
 
     // default: empty success

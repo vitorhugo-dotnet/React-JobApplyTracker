@@ -199,3 +199,101 @@ export interface LinkMetadata {
   image?: string
   domain?: string
 }
+
+/* ── Exports ─────────────────────────────────────────────────────────────── */
+
+export const EXPORT_FORMATS = ['CSV', 'XLSX'] as const
+export type ExportFormat = (typeof EXPORT_FORMATS)[number]
+
+export type ExportFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY'
+export type ExportDestination = 'GOOGLE_DRIVE' | 'EMAIL' | 'OBJECT_STORAGE' | 'WEBHOOK'
+export type ExportExecutionStatus = 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
+export type ExportTrigger = 'MANUAL' | 'SCHEDULED' | 'RUN_NOW'
+
+/**
+ * Filters applied before an export runs — the same predicates the applications
+ * list uses, except `archived: null`, which covers active *and* archived rows.
+ */
+export interface ExportFilters {
+  status?: string[]
+  search?: string | null
+  organization?: string | null
+  platform?: string | null
+  applicationDateFrom?: string | null
+  applicationDateTo?: string | null
+  archived?: boolean | null
+  interviewScheduled?: boolean | null
+  toSendLater?: boolean | null
+}
+
+export interface ExportColumnOption {
+  key: string
+  header: string
+}
+
+export interface ExportRequest {
+  format: ExportFormat
+  filters?: ExportFilters
+  columns?: string[]
+}
+
+export interface ExportSchedule {
+  id: string
+  name: string
+  format: ExportFormat
+  frequency: ExportFrequency
+  /** Local time in the schedule's timezone, "HH:mm". */
+  time: string
+  dayOfWeek?: number | null
+  dayOfMonth?: number | null
+  timezone: string
+  enabled: boolean
+  destination: ExportDestination
+  filters?: ExportFilters
+  columns?: string[]
+  /** UTC instants. */
+  nextRunAt?: string | null
+  lastRunAt?: string | null
+  running: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface ExportScheduleRequest {
+  name: string
+  format: ExportFormat
+  frequency: ExportFrequency
+  time: string
+  dayOfWeek?: number | null
+  dayOfMonth?: number | null
+  timezone?: string
+  enabled?: boolean
+  filters?: ExportFilters
+  columns?: string[]
+  destination: ExportDestination
+}
+
+export interface ExportExecution {
+  id: string
+  scheduleId?: string | null
+  scheduleName?: string | null
+  trigger: ExportTrigger
+  format: ExportFormat
+  destination?: ExportDestination | null
+  status: ExportExecutionStatus
+  startedAt: string
+  finishedAt?: string | null
+  recordCount?: number | null
+  truncated: boolean
+  fileName?: string | null
+  fileUrl?: string | null
+  errorMessage?: string | null
+}
+
+export interface ExportExecutionPage {
+  executions: ExportExecution[]
+  pageNumber: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
+}
