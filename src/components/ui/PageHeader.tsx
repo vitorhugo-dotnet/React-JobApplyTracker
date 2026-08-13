@@ -20,7 +20,7 @@ export function PageHeader({ title, sub, actions }: PageHeaderProps) {
 
 /** Standard page shell: scroll padding + max width, matching `.page`. */
 export function Page({ children }: { children: ReactNode }) {
-  return <div className="mx-auto max-w-page px-[30px] pb-[60px] pt-[26px]">{children}</div>
+  return <div className="mx-auto max-w-page px-4 pb-[60px] pt-[26px] sm:px-[30px]">{children}</div>
 }
 
 interface SectionLabelProps {

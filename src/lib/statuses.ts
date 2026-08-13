@@ -35,13 +35,13 @@ export const STATUS_FAMILY_LABEL: Record<StatusFamily, string> = {
 export const STATUS_SHORT_LABEL: Record<string, string> = {
   [TO_SEND_LATER_STATUS]: 'Draft',
   RH: 'RH',
-  'Fiz a RH - Aguardando Atualização': 'Post-RH',
-  'Fiz a Hiring Manager - Aguardando Atualização': 'Post-HM',
-  'Teste Técnico': 'Tech Test',
-  'Fiz teste Técnico - aguardando atualização': 'Tech Done',
-  'RH (Negociação)': 'Negotiation',
-  Rejeitado: 'Rejected',
-  'Tarde demais': 'Too Late',
+  'Pending HR Response': 'Post-RH',
+  'Pending Hiring Manager Response': 'Post-HM',
+  'Technical Test': 'Tech Test',
+  'Pending Technical Test Response': 'Tech Done',
+  'Offer Negotiation': 'Negotiation',
+  Rejected: 'Rejected',
+  Approved: 'Approved',
   Ghosting: 'Ghosting',
 }
 
@@ -49,14 +49,14 @@ export const STATUS_SHORT_LABEL: Record<string, string> = {
 export const STATUS_DISPLAY_ORDER: string[] = [
   TO_SEND_LATER_STATUS,
   'RH',
-  'Fiz a RH - Aguardando Atualização',
-  'Fiz a Hiring Manager - Aguardando Atualização',
-  'Teste Técnico',
-  'Fiz teste Técnico - aguardando atualização',
-  'RH (Negociação)',
-  'Rejeitado',
-  'Tarde demais',
+  'Pending HR Response',
+  'Pending Hiring Manager Response',
+  'Technical Test',
+  'Pending Technical Test Response',
+  'Offer Negotiation',
   'Ghosting',
+  'Rejected',
+  'Approved',
 ]
 
 /** Tailwind classes per family, mirroring the wireframe badge hierarchy. */
@@ -81,13 +81,13 @@ export const STATUS_FAMILY_DOT: Record<StatusFamily, string> = {
 const FAMILY_BY_STATUS: Record<string, StatusFamily> = {
   [TO_SEND_LATER_STATUS]: 'draft',
   RH: 'sent',
-  'Fiz a RH - Aguardando Atualização': 'replied',
-  'Fiz a Hiring Manager - Aguardando Atualização': 'replied',
-  'Teste Técnico': 'interview',
-  'Fiz teste Técnico - aguardando atualização': 'interview',
-  'RH (Negociação)': 'offer',
-  Rejeitado: 'rejected',
-  'Tarde demais': 'rejected',
+  'Pending HR Response': 'replied',
+  'Pending Hiring Manager Response': 'replied',
+  'Technical Test': 'interview',
+  'Pending Technical Test Response': 'interview',
+  'Offer Negotiation': 'offer',
+  Rejected: 'rejected',
+  Approved: 'offer',
   Ghosting: 'rejected',
 }
 

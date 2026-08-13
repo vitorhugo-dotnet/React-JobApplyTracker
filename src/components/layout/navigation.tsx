@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import {
   ApplicationsIcon,
   DashboardIcon,
+  DownloadIcon,
   MetricsIcon,
   SettingsIcon,
 } from '@/components/ui/icons'
@@ -19,6 +20,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', to: '/dashboard', section: 'Workspace', icon: DashboardIcon },
   { label: 'Applications', to: '/applications', section: 'Workspace', icon: ApplicationsIcon },
   { label: 'Metrics', to: '/metrics', section: 'Workspace', icon: MetricsIcon },
+  { label: 'Exports', to: '/exports', section: 'Workspace', icon: DownloadIcon },
   { label: 'Developer Tools', to: '/developer', section: 'System', glyph: '</>' },
   { label: 'Account Settings', to: '/account', section: 'System', icon: SettingsIcon },
 ]

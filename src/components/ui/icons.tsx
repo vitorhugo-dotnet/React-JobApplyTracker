@@ -19,6 +19,14 @@ export const SearchIcon = (p: IconProps) => (
   </svg>
 )
 
+export const FilterIcon = (p: IconProps) => (
+  <svg {...base({ size: 14, ...p })}>
+    <line x1="1.5" y1="4" x2="13.5" y2="4" stroke="currentColor" strokeLinecap="round" />
+    <line x1="3.5" y1="7.5" x2="11.5" y2="7.5" stroke="currentColor" strokeLinecap="round" />
+    <line x1="5.5" y1="11" x2="9.5" y2="11" stroke="currentColor" strokeLinecap="round" />
+  </svg>
+)
+
 export const PlusIcon = (p: IconProps) => (
   <svg {...base({ size: 14, ...p })}>
     <line x1="7.5" y1="2" x2="7.5" y2="13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
@@ -37,6 +45,19 @@ export const ArchiveIcon = (p: IconProps) => (
     <rect x="1.5" y="2" width="12" height="3" rx="0.5" stroke="currentColor" />
     <path d="M2.5 5.5V12.5H12.5V5.5" stroke="currentColor" />
     <line x1="6" y1="8" x2="9" y2="8" stroke="currentColor" strokeLinecap="round" />
+  </svg>
+)
+
+export const RestoreIcon = (p: IconProps) => (
+  <svg {...base({ size: 14, ...p })}>
+    <rect x="1.5" y="2" width="12" height="3" rx="0.5" stroke="currentColor" />
+    <path d="M2.5 5.5V12.5H12.5V5.5" stroke="currentColor" />
+    <path
+      d="M7.5 11.5V7.5M7.5 7.5L5.8 9.2M7.5 7.5L9.2 9.2"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 )
 
@@ -101,6 +122,14 @@ export const CollapseIcon = (p: IconProps) => (
   </svg>
 )
 
+export const CoffeeIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M2 4.5H11V8.5A4 4 0 017 12.5H6A4 4 0 012 8.5V4.5Z" stroke="currentColor" strokeLinejoin="round" />
+    <path d="M11 6H12A2 2 0 0112 10H10.5" stroke="currentColor" strokeLinecap="round" />
+    <path d="M4.5 1.5V3M7 1.5V3M9.5 1.5V3" stroke="currentColor" strokeLinecap="round" />
+  </svg>
+)
+
 /* ---- sidebar nav icons ---- */
 export const DashboardIcon = (p: IconProps) => (
   <svg {...base(p)}>
@@ -127,6 +156,14 @@ export const MetricsIcon = (p: IconProps) => (
     <rect x="0.5" y="9" width="3.5" height="5.5" rx="0.5" stroke="currentColor" />
     <rect x="5.75" y="5" width="3.5" height="9.5" rx="0.5" stroke="currentColor" />
     <rect x="11" y="1.5" width="3.5" height="13" rx="0.5" stroke="currentColor" />
+  </svg>
+)
+
+export const DownloadIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <line x1="7.5" y1="1.5" x2="7.5" y2="9.5" stroke="currentColor" strokeLinecap="round" />
+    <path d="M4.5 6.5L7.5 9.5L10.5 6.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M2 11V13H13V11" stroke="currentColor" strokeLinecap="round" />
   </svg>
 )
 

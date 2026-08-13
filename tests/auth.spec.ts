@@ -27,6 +27,7 @@ test.describe('Authentication', () => {
     await page.getByLabel('Full name').fill('New User')
     await page.getByLabel('Email').fill('new@user.dev')
     await page.getByLabel('Password').fill('supersecret')
+    await page.getByRole('checkbox').check()
     await page.getByRole('button', { name: 'Create account' }).click()
 
     await expect(page).toHaveURL(/\/dashboard$/)

@@ -10,6 +10,7 @@ export interface RegisterPayload {
   name: string
   email: string
   password: string
+  acceptedPrivacyPolicy: boolean
 }
 
 export const login = (data: LoginPayload) => unwrap(api.post<AuthResponse>('/auth/login', data))

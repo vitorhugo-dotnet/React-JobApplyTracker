@@ -16,7 +16,7 @@ interface ListPanelProps {
 
 export function ListPanel({ title, items, showDue, viewAllTo, emptyLabel }: ListPanelProps) {
   const navigate = useNavigate()
-  const visible = items.slice(0, 4)
+  const visible = (items ?? []).slice(0, 4)
 
   return (
     <Panel>
