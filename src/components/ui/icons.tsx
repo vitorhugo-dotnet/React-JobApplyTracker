@@ -48,6 +48,19 @@ export const ArchiveIcon = (p: IconProps) => (
   </svg>
 )
 
+export const RestoreIcon = (p: IconProps) => (
+  <svg {...base({ size: 14, ...p })}>
+    <rect x="1.5" y="2" width="12" height="3" rx="0.5" stroke="currentColor" />
+    <path d="M2.5 5.5V12.5H12.5V5.5" stroke="currentColor" />
+    <path
+      d="M7.5 11.5V7.5M7.5 7.5L5.8 9.2M7.5 7.5L9.2 9.2"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
 export const TrashIcon = (p: IconProps) => (
   <svg {...base({ size: 14, ...p })}>
     <path d="M2.5 4H12.5M5 4V2.5H10V4M3.5 4V12.5H11.5V4" stroke="currentColor" strokeLinejoin="round" />
@@ -143,6 +156,14 @@ export const MetricsIcon = (p: IconProps) => (
     <rect x="0.5" y="9" width="3.5" height="5.5" rx="0.5" stroke="currentColor" />
     <rect x="5.75" y="5" width="3.5" height="9.5" rx="0.5" stroke="currentColor" />
     <rect x="11" y="1.5" width="3.5" height="13" rx="0.5" stroke="currentColor" />
+  </svg>
+)
+
+export const DownloadIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <line x1="7.5" y1="1.5" x2="7.5" y2="9.5" stroke="currentColor" strokeLinecap="round" />
+    <path d="M4.5 6.5L7.5 9.5L10.5 6.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M2 11V13H13V11" stroke="currentColor" strokeLinecap="round" />
   </svg>
 )
 

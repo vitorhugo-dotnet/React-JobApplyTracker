@@ -1,19 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
+import { errorMessage } from '@/lib/utils'
 
 export interface AsyncState<T> {
   data: T | null
   loading: boolean
   error: string | null
   reload: () => void
-}
-
-function toMessage(error: unknown, fallback: string): string {
-  if (typeof error === 'object' && error && 'response' in error) {
-    const msg = (error as { response?: { data?: { message?: string } } }).response?.data?.message
-    if (msg) return msg
-  }
-  if (error instanceof Error && error.message) return error.message
-  return fallback
 }
 
 /**
@@ -42,7 +34,7 @@ export function useAsync<T>(
         if (active) setData(result)
       })
       .catch((err) => {
-        if (active) setError(toMessage(err, fallbackError))
+        if (active) setError(errorMessage(err, fallbackError))
       })
       .finally(() => {
         if (active) setLoading(false)

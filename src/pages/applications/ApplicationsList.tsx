@@ -6,9 +6,9 @@ import { Segmented } from '@/components/ui/Segmented'
 import { Field, Input, Select } from '@/components/ui/Field'
 import { Pager } from '@/components/ui/Pager'
 import { ConfirmDialog } from '@/components/ui/Dialog'
-import { CenteredSpinner, EmptyState, ErrorNote } from '@/components/ui/feedback'
+import { CenteredSpinner, EmptyState, ErrorNote, SuccessNote } from '@/components/ui/feedback'
 import { FilterIcon, PlusIcon, SearchIcon } from '@/components/ui/icons'
-import { cn } from '@/lib/utils'
+import { cn, errorMessage } from '@/lib/utils'
 import { STATUS_OPTIONS } from '@/lib/statuses'
 import { useAsync } from '@/hooks/useAsync'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
@@ -17,6 +17,7 @@ import {
   archiveApplication,
   deleteApplication,
   getApplications,
+  restoreApplication,
 } from '@/api/applications'
 import type { Application, ApplicationQuery } from '@/types'
 import { ApplicationsTable, type SortState } from '@/components/applications/ApplicationsTable'
@@ -92,6 +93,16 @@ export default function ApplicationsList() {
   const [advanced, setAdvanced] = useState<AdvancedFilters>(EMPTY_ADVANCED)
   const [pendingArchive, setPendingArchive] = useState<Application | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Application | null>(null)
+  const [restoringId, setRestoringId] = useState<string | null>(null)
+  const [restored, setRestored] = useState<string | null>(null)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
+  /**
+   * Bumped after every mutation. It is part of the loader deps, so it
+   * invalidates *both* tab queries: the list on screen refetches immediately
+   * and the other tab can never be served the result of a pre-mutation run.
+   */
+  const [dataVersion, setDataVersion] = useState(0)
+  const invalidateApplications = () => setDataVersion((v) => v + 1)
 
   const debouncedSearch = useDebouncedValue(search, 350)
   const debouncedAdvanced = useDebouncedValue(advanced, 350)
@@ -153,9 +164,9 @@ export default function ApplicationsList() {
     }
   }, [tab, advancedOpen, debouncedSearch, debouncedAdvanced, status, sort, page])
 
-  const { data, loading, error, reload } = useAsync(
+  const { data, loading, error } = useAsync(
     () => getApplications(query),
-    [query],
+    [query, dataVersion],
     'Could not load applications.',
   )
 
@@ -179,14 +190,35 @@ export default function ApplicationsList() {
     if (!pendingArchive) return
     await archiveApplication(pendingArchive.id)
     setPendingArchive(null)
-    reload()
+    invalidateApplications()
   }
 
   const confirmDelete = async () => {
     if (!pendingDelete) return
     await deleteApplication(pendingDelete.id)
     setPendingDelete(null)
-    reload()
+    invalidateApplications()
+  }
+
+  /**
+   * Restore sends the archive flag on its own — a partial patch — so the
+   * stored status survives untouched. Archive visibility and status are
+   * independent concerns and neither may drive the other.
+   */
+  const restore = async (app: Application) => {
+    if (restoringId) return
+    setRestoringId(app.id)
+    setRestored(null)
+    setRestoreError(null)
+    try {
+      await restoreApplication(app.id)
+      setRestored(app.vacancyName)
+      invalidateApplications()
+    } catch (err) {
+      setRestoreError(errorMessage(err, `Could not restore "${app.vacancyName}". Please try again.`))
+    } finally {
+      setRestoringId(null)
+    }
   }
 
   const tabCount = data?.totalElements ?? 0
@@ -212,6 +244,8 @@ export default function ApplicationsList() {
             onClick={() => {
               setTab(t)
               setPage(0)
+              setRestored(null)
+              setRestoreError(null)
             }}
             className={cn(
               '-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13.5px] capitalize',
@@ -469,6 +503,18 @@ export default function ApplicationsList() {
         </div>
       )}
 
+      {/* feedback for the row actions, kept above the list so it survives a refetch */}
+      {restored && (
+        <div className="mb-4">
+          <SuccessNote message={`"${restored}" was restored to your active applications.`} />
+        </div>
+      )}
+      {restoreError && (
+        <div className="mb-4">
+          <ErrorNote message={restoreError} />
+        </div>
+      )}
+
       {loading && <CenteredSpinner label="Loading applications…" />}
       {error && !loading && <ErrorNote message={error} />}
 
@@ -491,7 +537,12 @@ export default function ApplicationsList() {
           ) : effectiveView === 'board' ? (
             <ApplicationsBoard items={items} />
           ) : effectiveView === 'mobile' ? (
-            <ApplicationsCards items={items} />
+            <ApplicationsCards
+              items={items}
+              archived={tab === 'archived'}
+              onRestore={restore}
+              busyId={restoringId}
+            />
           ) : (
             <>
               <ApplicationsTable
@@ -500,8 +551,10 @@ export default function ApplicationsList() {
                 onSort={onSortColumn}
                 onEdit={(app) => navigate(`/applications/${app.id}/edit`)}
                 onArchive={setPendingArchive}
+                onRestore={restore}
                 onDelete={setPendingDelete}
                 archived={tab === 'archived'}
+                busyId={restoringId}
               />
               <div className="rounded-b border-x border-b border-mono-e5">
                 <Pager

@@ -41,6 +41,9 @@ The UI implements the Applywell wireframe handoff (`claude.ai/design`):
   unsaved-changes banner, archive & delete confirmations
 - **Metrics** — conversion funnel, applications-by-status bars, weekly-volume
   line chart, pipeline averages (pure CSS/SVG, monochrome)
+- **Exports** — manual CSV/XLSX download with status, organization, date-range
+  and archive filters plus a column picker; recurring exports to Google Drive
+  (daily / weekly / monthly with timezone), run-now, and the execution history
 - **Developer Tools** — API info, JSON/CSV export, environment panel
 - **Account Settings** — profile, change password, passkeys, Google Drive
   status, danger zone
@@ -49,7 +52,7 @@ The UI implements the Applywell wireframe handoff (`claude.ai/design`):
 
 ```text
 src/
-  api/          # Typed HTTP modules (auth, applications, dashboard, gamification, resumes)
+  api/          # Typed HTTP modules (auth, applications, dashboard, exports, gamification, resumes)
   components/
     applications/  # Table / Board / Cards views
     dashboard/     # MetricCard, AchievementCard, ListPanel
@@ -57,7 +60,7 @@ src/
     layout/        # Sidebar, Topbar, AppLayout, ProtectedRoute, navigation
     ui/            # Button, StatusBadge, Field, Segmented, Panel, Dialog, Pager, icons…
   hooks/        # useAsync, useDebouncedValue
-  lib/          # api (axios), statuses, format, utils
+  lib/          # api (axios), statuses, format, download, utils
   pages/        # Screens grouped by domain
   store/        # Zustand stores (auth, gamification)
   types/        # Domain types mirroring the OpenAPI contract
