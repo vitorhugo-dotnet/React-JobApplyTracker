@@ -86,6 +86,28 @@ export interface ApplicationRequest {
   interviewCount?: number
 }
 
+/**
+ * Partial payload for PATCH /api/v1/applications/{id}. Only the keys present
+ * are changed — anything omitted keeps its stored value, so callers must never
+ * pad the body with flags they do not intend to touch. In particular, patching
+ * `archived` leaves `status` exactly as it was.
+ */
+export interface ApplicationPatch {
+  vacancyName?: string
+  recruiterName?: string | null
+  organization?: string | null
+  vacancyLink?: string | null
+  applicationDate?: string | null
+  rhAcceptedConnection?: boolean
+  interviewScheduled?: boolean
+  nextStepDateTime?: string | null
+  status?: string | null
+  recruiterDmReminderEnabled?: boolean
+  note?: string | null
+  interviewCount?: number
+  archived?: boolean
+}
+
 export interface ApplicationPage {
   applications: Application[]
   pageNumber: number
