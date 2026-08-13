@@ -85,7 +85,8 @@ test.describe('Exports', () => {
 
     await page.getByRole('button', { name: 'Run now' }).click()
 
-    await expect(page.getByText('run now')).toBeVisible()
+    // `exact` keeps this off the "Run now" button, which is still on screen.
+    await expect(page.getByText('run now', { exact: true })).toBeVisible()
     await expect(page.getByRole('cell', { name: 'PENDING' })).toBeVisible()
   })
 
