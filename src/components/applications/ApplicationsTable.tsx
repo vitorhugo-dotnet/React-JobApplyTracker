@@ -1,7 +1,15 @@
 import { cn } from '@/lib/utils'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { ArchiveIcon, EditIcon, NoteIcon, SortIcon, TrashIcon } from '@/components/ui/icons'
+import { Spinner } from '@/components/ui/feedback'
+import {
+  ArchiveIcon,
+  EditIcon,
+  NoteIcon,
+  RestoreIcon,
+  SortIcon,
+  TrashIcon,
+} from '@/components/ui/icons'
 import type { Application } from '@/types'
 
 export interface SortState {
@@ -31,8 +39,11 @@ interface ApplicationsTableProps {
   onSort: (key: string) => void
   onEdit: (app: Application) => void
   onArchive: (app: Application) => void
+  onRestore: (app: Application) => void
   onDelete: (app: Application) => void
   archived?: boolean
+  /** Application whose row action is in flight — its control is disabled. */
+  busyId?: string | null
 }
 
 export function ApplicationsTable({
@@ -41,8 +52,10 @@ export function ApplicationsTable({
   onSort,
   onEdit,
   onArchive,
+  onRestore,
   onDelete,
   archived,
+  busyId,
 }: ApplicationsTableProps) {
   return (
     <div className="overflow-x-auto rounded border border-mono-e5">
@@ -103,7 +116,15 @@ export function ApplicationsTable({
                   <RowAction title="Edit" onClick={() => onEdit(app)}>
                     <EditIcon />
                   </RowAction>
-                  {!archived && (
+                  {archived ? (
+                    <RowAction
+                      title="Restore"
+                      onClick={() => onRestore(app)}
+                      busy={busyId === app.id}
+                    >
+                      <RestoreIcon />
+                    </RowAction>
+                  ) : (
                     <RowAction title="Archive" onClick={() => onArchive(app)}>
                       <ArchiveIcon />
                     </RowAction>
@@ -124,10 +145,12 @@ export function ApplicationsTable({
 function RowAction({
   title,
   onClick,
+  busy,
   children,
 }: {
   title: string
   onClick: () => void
+  busy?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -135,10 +158,15 @@ function RowAction({
       type="button"
       title={title}
       aria-label={title}
+      aria-busy={busy || undefined}
+      disabled={busy}
       onClick={onClick}
-      className="grid h-[26px] w-[26px] place-items-center rounded border border-transparent text-mono-9 hover:border-mono-e5 hover:bg-mono-w hover:text-mono-1"
+      className={cn(
+        'grid h-[26px] w-[26px] place-items-center rounded border border-transparent text-mono-9 hover:border-mono-e5 hover:bg-mono-w hover:text-mono-1',
+        busy && 'cursor-not-allowed opacity-60',
+      )}
     >
-      {children}
+      {busy ? <Spinner className="h-3.5 w-3.5 border" /> : children}
     </button>
   )
 }

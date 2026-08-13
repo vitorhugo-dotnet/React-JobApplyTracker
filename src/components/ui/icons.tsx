@@ -48,6 +48,19 @@ export const ArchiveIcon = (p: IconProps) => (
   </svg>
 )
 
+export const RestoreIcon = (p: IconProps) => (
+  <svg {...base({ size: 14, ...p })}>
+    <rect x="1.5" y="2" width="12" height="3" rx="0.5" stroke="currentColor" />
+    <path d="M2.5 5.5V12.5H12.5V5.5" stroke="currentColor" />
+    <path
+      d="M7.5 11.5V7.5M7.5 7.5L5.8 9.2M7.5 7.5L9.2 9.2"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
 export const TrashIcon = (p: IconProps) => (
   <svg {...base({ size: 14, ...p })}>
     <path d="M2.5 4H12.5M5 4V2.5H10V4M3.5 4V12.5H11.5V4" stroke="currentColor" strokeLinejoin="round" />

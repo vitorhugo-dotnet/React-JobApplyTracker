@@ -143,6 +143,33 @@ export async function installMockApi(page: Page, options: MockOptions = {}): Pro
         if (idx >= 0) active.splice(idx, 1)
         return route.fulfill({ status: 204, body: '' })
       }
+      // Partial update: only the keys present in the body change, everything
+      // else keeps its stored value — including `status` during a restore.
+      if (method === 'PATCH') {
+        const body = request.postDataJSON() as Partial<Application>
+        const archivedIdx = archived.findIndex((a) => a.id === id)
+        const current = idx >= 0 ? active[idx] : archived[archivedIdx]
+        if (!current) return json(route, { message: 'not found' }, 404)
+
+        const updated: Application = { ...current, ...body }
+
+        if (body.archived === true && idx >= 0) {
+          active.splice(idx, 1)
+          updated.archivedAt = new Date().toISOString()
+          archived.unshift(updated)
+        } else if (body.archived === false && archivedIdx >= 0) {
+          archived.splice(archivedIdx, 1)
+          // The API omits archivedAt from the JSON once it is cleared.
+          delete updated.archivedAt
+          active.unshift(updated)
+        } else if (idx >= 0) {
+          active[idx] = updated
+        } else if (archivedIdx >= 0) {
+          archived[archivedIdx] = updated
+        }
+
+        return json(route, updated)
+      }
     }
 
     const archiveMatch = path.match(/^\/applications\/([^/]+)\/archive$/)
