@@ -89,6 +89,9 @@ tests/
 - `VITE_API_BASE_URL` (or `VITE_API_URL`): API base; `/api/v1` is appended if absent
 - `VITE_BASE_PATH`: deploy base path (default `/`)
 - `API_TARGET`: dev proxy target for `/api` (default `http://localhost:8080`)
+- `VITE_GITHUB_URL`: fallback link for the Developer Tools source-code card, used only while the
+  backend has not resolved the linked GitHub account (the account itself is referenced by its
+  stable numeric user ID, configured on the backend as `GITHUB_USER_ID`)
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080

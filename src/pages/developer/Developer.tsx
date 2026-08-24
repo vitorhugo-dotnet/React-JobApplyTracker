@@ -1,5 +1,7 @@
 import { Page, PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
+import { getGitHubProfile } from '@/api/github'
+import { useAsync } from '@/hooks/useAsync'
 
 function Card({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -22,11 +24,27 @@ function GitHubIcon() {
   )
 }
 
+/**
+ * Presentation-only fallback used while the profile is loading or when the backend cannot reach
+ * GitHub. It is never treated as the identity of the account - that is the numeric user ID the
+ * backend resolves the profile from.
+ */
+const FALLBACK_GITHUB_URL = import.meta.env.VITE_GITHUB_URL || 'https://github.com/vitorhugo-dotnet'
+
+function stripGitHubHost(url: string) {
+  return url.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/+$/, '')
+}
+
 export default function Developer() {
   const apiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8080'
   const apiRoot = apiBase.replace(/\/api.*/, '')
   const swaggerUrl = `${apiRoot}/swagger-ui.html`
-  const githubUrl = import.meta.env.VITE_GITHUB_URL || 'https://github.com/vitorhugo-java'
+
+  // The account is referenced by its stable GitHub user ID; the login and URL below are whatever
+  // GitHub reports right now, so renaming the account does not break this link.
+  const { data: profile } = useAsync(getGitHubProfile, [])
+  const githubUrl = profile?.htmlUrl || FALLBACK_GITHUB_URL
+  const githubLabel = profile?.login || stripGitHubHost(FALLBACK_GITHUB_URL)
 
   return (
     <Page>
@@ -69,7 +87,7 @@ export default function Developer() {
                 rel="noopener noreferrer"
                 className="text-[13.5px] font-medium text-mono-1 hover:underline"
               >
-                {githubUrl.replace('https://github.com/', '')}
+                {githubLabel}
               </a>
               <div className="text-[12px] text-mono-9">Frontend &amp; backend repositories</div>
             </div>

@@ -3,6 +3,7 @@ import type { Application, ExportExecution, ExportSchedule } from '../../src/typ
 import {
   ARCHIVED_APP,
   MOCK_ACHIEVEMENTS,
+  MOCK_GITHUB_PROFILE,
   MOCK_PROFILE,
   MOCK_SUMMARY,
   MOCK_USER,
@@ -67,6 +68,9 @@ export async function installMockApi(page: Page, options: MockOptions = {}): Pro
     if (path === '/dashboard/summary') return json(route, MOCK_SUMMARY)
     if (path === '/gamification/profile') return json(route, MOCK_PROFILE)
     if (path === '/gamification/achievements') return json(route, MOCK_ACHIEVEMENTS)
+
+    // ---- github ----
+    if (path === '/github/profile') return json(route, MOCK_GITHUB_PROFILE)
 
     // ---- google drive / resumes ----
     if (path === '/google-drive/base-resumes' && method === 'GET') return json(route, [])
