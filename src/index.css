@@ -16,6 +16,7 @@
     --mono-w: #fff;
     --danger: #7a2e2e;
     --surface-subtle: #fcfcfc;
+    --surface-highlight: #fafaf7;
     color-scheme: light;
   }
 
@@ -33,6 +34,7 @@
     --mono-w: #0d0d0d;
     --danger: #c47979;
     --surface-subtle: #131313;
+    --surface-highlight: #1a1a17;
     color-scheme: dark;
   }
 

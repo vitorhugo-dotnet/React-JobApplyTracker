@@ -59,7 +59,7 @@ export default function ForgotPassword() {
             />
           </Field>
           <Button type="submit" variant="primary" disabled={isSubmitting} className="justify-center">
-            {isSubmitting ? <Spinner className="border-white/40 border-t-white" /> : 'Send reset link'}
+            {isSubmitting ? <Spinner className="border-mono-5 border-t-mono-w" /> : 'Send reset link'}
           </Button>
         </form>
       )}

@@ -130,7 +130,7 @@ export default function Register() {
         </div>
 
         <Button type="submit" variant="primary" disabled={isSubmitting} className="justify-center">
-          {isSubmitting ? <Spinner className="border-white/40 border-t-white" /> : 'Create account'}
+          {isSubmitting ? <Spinner className="border-mono-5 border-t-mono-w" /> : 'Create account'}
         </Button>
       </form>
     </AuthShell>
