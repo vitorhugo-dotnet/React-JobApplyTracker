@@ -307,7 +307,7 @@ function ManualExportPanel({
             </span>
           )}
           <Button variant="primary" onClick={handleDownload} disabled={downloading || noColumnsSelected}>
-            {downloading ? <Spinner className="border-white/40 border-t-white" /> : `Download ${format}`}
+            {downloading ? <Spinner className="border-mono-5 border-t-mono-w" /> : `Download ${format}`}
           </Button>
         </div>
       </div>
@@ -384,7 +384,7 @@ function ScheduleDialog({
             Cancel
           </Button>
           <Button variant="primary" onClick={() => onSave(form)} disabled={saving || !form.name.trim()}>
-            {saving ? <Spinner className="border-white/40 border-t-white" /> : 'Save schedule'}
+            {saving ? <Spinner className="border-mono-5 border-t-mono-w" /> : 'Save schedule'}
           </Button>
         </>
       }

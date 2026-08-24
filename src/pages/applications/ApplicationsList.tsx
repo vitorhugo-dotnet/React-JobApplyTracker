@@ -338,7 +338,7 @@ export default function ApplicationsList() {
 
       {/* advanced filter panel — one control per application field */}
       {advancedOpen && (
-        <div className="mb-4 rounded border border-mono-e5 bg-[#fafaf7] p-4">
+        <div className="mb-4 rounded border border-mono-e5 bg-surface-highlight p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[13px] font-semibold text-mono-1">Advanced filters</h2>
             <button
@@ -347,7 +347,7 @@ export default function ApplicationsList() {
                 setAdvanced(EMPTY_ADVANCED)
                 setPage(0)
               }}
-              className="text-[12px] text-mono-9 underline-offset-2 hover:text-mono-2 hover:underline"
+              className="text-[12px] text-mono-5 underline-offset-2 hover:text-mono-1 hover:underline"
             >
               Clear all
             </button>

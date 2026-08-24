@@ -183,7 +183,7 @@ export default function ApplicationForm() {
 
       <form onSubmit={onSubmit} className="mx-auto max-w-form">
         {isDirty && (
-          <div className="mb-5 flex items-center gap-2.5 rounded border border-mono-e5 border-l-[3px] border-l-mono-2 bg-[#fafaf7] px-3.5 py-2.5 text-[13px] text-mono-2">
+          <div className="mb-5 flex items-center gap-2.5 rounded border border-mono-e5 border-l-[3px] border-l-mono-2 bg-surface-highlight px-3.5 py-2.5 text-[13px] text-mono-2">
             <span className="mono text-[11px]">●</span>
             You have unsaved changes.
           </div>
@@ -279,13 +279,13 @@ export default function ApplicationForm() {
         </div>
 
         {isEdit && (existing.data?.driveResumeDocumentUrl || existing.data?.driveResumeFileId) && (
-          <div className="mt-5 rounded border border-mono-e5 border-l-[3px] border-l-mono-2 bg-[#fafaf7] px-3.5 py-3">
-            <div className="mb-1 text-[11px] uppercase tracking-wide text-mono-9">Generated CV</div>
+          <div className="mt-5 rounded border border-mono-e5 border-l-[3px] border-l-mono-2 bg-surface-highlight px-3.5 py-3">
+            <div className="mb-1 text-[11px] uppercase tracking-wide text-mono-5">Generated CV</div>
             <div className="text-[13px] text-mono-2">
               {existing.data?.driveResumeFileName ?? 'Generated resume'}
             </div>
             {existing.data?.driveResumeGeneratedAt && (
-              <div className="mt-0.5 text-xs text-mono-9">
+              <div className="mt-0.5 text-xs text-mono-5">
                 Generated {formatDateTime(existing.data.driveResumeGeneratedAt)}
               </div>
             )}
@@ -347,7 +347,7 @@ export default function ApplicationForm() {
             Create Resume
           </Button>
           <Button type="submit" variant="primary" disabled={isSubmitting}>
-            {isSubmitting ? <Spinner className="border-white/40 border-t-white" /> : 'Save'}
+            {isSubmitting ? <Spinner className="border-mono-5 border-t-mono-w" /> : 'Save'}
           </Button>
         </div>
       </form>

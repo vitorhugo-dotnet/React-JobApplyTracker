@@ -21,6 +21,7 @@ export default {
         danger: 'var(--danger)',
         surface: {
           subtle: 'var(--surface-subtle)',
+          highlight: 'var(--surface-highlight)',
         },
       },
       fontFamily: {

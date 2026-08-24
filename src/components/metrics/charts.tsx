@@ -1,6 +1,7 @@
 /** Pure CSS/SVG monochrome charts — no chart library, no color fills. */
 
-const GRAYS = ['#000', '#222', '#555', '#999', '#cfcfcf']
+/* Theme tokens rather than literals so the scale inverts with dark mode. */
+const GRAYS = ['var(--mono-0)', 'var(--mono-2)', 'var(--mono-5)', 'var(--mono-9)', 'var(--mono-c)']
 
 export interface FunnelStep {
   label: string
@@ -23,7 +24,7 @@ export function Funnel({ steps }: { steps: FunnelStep[] }) {
                 style={{
                   width: `${widthPct}%`,
                   background: GRAYS[Math.min(i, GRAYS.length - 1)],
-                  color: i >= 3 ? '#222' : '#fff',
+                  color: i >= 3 ? 'var(--mono-2)' : 'var(--mono-w)',
                 }}
               >
                 {step.value}
@@ -99,19 +100,19 @@ export function LineChart({ points }: { points: LinePoint[] }) {
   return (
     <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="block h-[150px] w-full">
-        <line x1="0" y1="50" x2="100" y2="50" stroke="#f5f5f5" strokeWidth="0.4" />
-        <line x1="0" y1="95" x2="100" y2="95" stroke="#e5e5e5" strokeWidth="0.4" />
-        <polygon points={area} fill="#f5f5f5" />
+        <line x1="0" y1="50" x2="100" y2="50" stroke="var(--mono-f5)" strokeWidth="0.4" />
+        <line x1="0" y1="95" x2="100" y2="95" stroke="var(--mono-e5)" strokeWidth="0.4" />
+        <polygon points={area} fill="var(--mono-f5)" />
         <polyline
           points={line}
           fill="none"
-          stroke="#111"
+          stroke="var(--mono-1)"
           strokeWidth="0.9"
           vectorEffect="non-scaling-stroke"
           strokeLinejoin="round"
         />
         {coords.map((c, i) => (
-          <circle key={i} cx={c.x} cy={c.y} r="0.9" fill="#000" vectorEffect="non-scaling-stroke" />
+          <circle key={i} cx={c.x} cy={c.y} r="0.9" fill="var(--mono-0)" vectorEffect="non-scaling-stroke" />
         ))}
       </svg>
       <div className="mt-2 flex justify-between font-mono text-[10px] text-mono-9">

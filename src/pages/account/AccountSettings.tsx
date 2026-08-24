@@ -102,7 +102,7 @@ function ProfileSection() {
         <div className="mt-[18px] flex items-center justify-end gap-3">
           {saved && <span className="font-mono text-[11px] text-mono-9">Saved ✓</span>}
           <Button type="submit" variant="primary" disabled={isSubmitting || !isDirty}>
-            {isSubmitting ? <Spinner className="border-white/40 border-t-white" /> : 'Save profile'}
+            {isSubmitting ? <Spinner className="border-mono-5 border-t-mono-w" /> : 'Save profile'}
           </Button>
         </div>
       </form>

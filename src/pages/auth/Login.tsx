@@ -124,7 +124,7 @@ export default function Login() {
         </div>
 
         <Button type="submit" variant="primary" disabled={isSubmitting} className="justify-center">
-          {isSubmitting ? <Spinner className="border-white/40 border-t-white" /> : 'Sign in'}
+          {isSubmitting ? <Spinner className="border-mono-5 border-t-mono-w" /> : 'Sign in'}
         </Button>
 
         {passkeySupported && (
