@@ -45,6 +45,8 @@ The UI implements the Applywell wireframe handoff (`claude.ai/design`):
   and archive filters plus a column picker; recurring exports to Google Drive
   (daily / weekly / monthly with timezone), run-now, and the execution history
 - **Developer Tools** — API info, JSON/CSV export, environment panel
+- **MCP** — remote MCP endpoint with copy action plus OAuth setup guides for
+  ChatGPT, Codex, Claude/Claude Code and any other Remote MCP client
 - **Account Settings** — profile, change password, passkeys, Google Drive
   status, danger zone
 
@@ -92,6 +94,9 @@ tests/
 - `VITE_GITHUB_URL`: fallback link for the Developer Tools source-code card, used only while the
   backend has not resolved the linked GitHub account (the account itself is referenced by its
   stable numeric user ID, configured on the backend as `GITHUB_USER_ID`)
+- `VITE_MCP_ENDPOINT`: remote MCP endpoint advertised on the MCP page
+  (default `https://jobapply-api.hugojava.dev/mcp`); documentation only — the OAuth/PKCE
+  authorization flow runs between the MCP client and the backend
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080
