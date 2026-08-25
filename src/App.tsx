@@ -16,6 +16,7 @@ import ApplicationForm from '@/pages/applications/ApplicationForm'
 import Metrics from '@/pages/metrics/Metrics'
 import Exports from '@/pages/exports/Exports'
 import Developer from '@/pages/developer/Developer'
+import McpIntegration from '@/pages/mcp/McpIntegration'
 import AccountSettings from '@/pages/account/AccountSettings'
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy'
 
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="/metrics" element={<Metrics />} />
         <Route path="/exports" element={<Exports />} />
         <Route path="/developer" element={<Developer />} />
+        <Route path="/mcp" element={<McpIntegration />} />
         <Route path="/account" element={<AccountSettings />} />
       </Route>
 

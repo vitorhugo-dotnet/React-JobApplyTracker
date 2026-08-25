@@ -167,6 +167,15 @@ export const DownloadIcon = (p: IconProps) => (
   </svg>
 )
 
+export const PlugIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <line x1="5" y1="1" x2="5" y2="4.5" stroke="currentColor" strokeLinecap="round" />
+    <line x1="10" y1="1" x2="10" y2="4.5" stroke="currentColor" strokeLinecap="round" />
+    <path d="M2.5 4.5H12.5V7.5A4 4 0 018.5 11.5H6.5A4 4 0 012.5 7.5V4.5Z" stroke="currentColor" strokeLinejoin="round" />
+    <line x1="7.5" y1="11.5" x2="7.5" y2="14.5" stroke="currentColor" strokeLinecap="round" />
+  </svg>
+)
+
 export const SettingsIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <circle cx="7.5" cy="5" r="2.5" stroke="currentColor" />

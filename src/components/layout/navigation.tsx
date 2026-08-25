@@ -4,6 +4,7 @@ import {
   DashboardIcon,
   DownloadIcon,
   MetricsIcon,
+  PlugIcon,
   SettingsIcon,
 } from '@/components/ui/icons'
 
@@ -22,6 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Metrics', to: '/metrics', section: 'Workspace', icon: MetricsIcon },
   { label: 'Exports', to: '/exports', section: 'Workspace', icon: DownloadIcon },
   { label: 'Developer Tools', to: '/developer', section: 'System', glyph: '</>' },
+  { label: 'MCP', to: '/mcp', section: 'System', icon: PlugIcon },
   { label: 'Account Settings', to: '/account', section: 'System', icon: SettingsIcon },
 ]
 
