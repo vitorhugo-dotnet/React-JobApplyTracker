@@ -297,3 +297,15 @@ export interface ExportExecutionPage {
   totalElements: number
   totalPages: number
 }
+
+/**
+ * GitHub account linked to the app. `userId` is the canonical identity: `login` and `htmlUrl` are
+ * presentation data resolved from GitHub on every lookup and may change at any time.
+ */
+export interface GitHubProfile {
+  userId: number | null
+  login: string
+  htmlUrl: string
+  avatarUrl?: string | null
+  stale: boolean
+}

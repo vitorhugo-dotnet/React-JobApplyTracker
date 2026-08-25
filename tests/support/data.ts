@@ -3,6 +3,7 @@ import type {
   Application,
   DashboardSummary,
   GamificationProfile,
+  GitHubProfile,
   User,
 } from '../../src/types'
 
@@ -14,6 +15,14 @@ export const MOCK_USER: User = {
   roles: ['USER'],
   canUseGoogleIntegration: true,
   privacyPolicyAccepted: true,
+}
+
+export const MOCK_GITHUB_PROFILE: GitHubProfile = {
+  userId: 65777252,
+  login: 'vitorhugo-dotnet',
+  htmlUrl: 'https://github.com/vitorhugo-dotnet',
+  avatarUrl: 'https://avatars.githubusercontent.com/u/65777252?v=4',
+  stale: false,
 }
 
 export const MOCK_PROFILE: GamificationProfile = {
