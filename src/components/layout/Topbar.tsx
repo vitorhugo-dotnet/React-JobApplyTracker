@@ -85,7 +85,7 @@ export function Topbar({ root, leaf, onToggleSidebar }: TopbarProps) {
           <input
             type="search"
             placeholder="Search…"
-            className="w-full border-0 bg-transparent text-[13px] text-mono-1 outline-none placeholder:text-mono-9"
+            className="w-full border-0 bg-transparent text-[13px] text-mono-1 outline-hidden placeholder:text-mono-9"
           />
           <span className="rounded border border-mono-e5 border-b-2 bg-surface-subtle px-1.5 py-px font-mono text-[11px] text-mono-5">
             ⌘K

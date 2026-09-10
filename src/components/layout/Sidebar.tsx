@@ -44,7 +44,7 @@ export function Sidebar({ collapsed, activeCount }: SidebarProps) {
         {sections.map((section) => (
           <div key={section} className="contents">
             {!collapsed && (
-              <div className="whitespace-nowrap px-2.5 pb-1.5 pt-3 font-mono text-[10px] uppercase tracking-[0.1em] text-mono-9">
+              <div className="whitespace-nowrap px-2.5 pb-1.5 pt-3 font-mono text-[10px] uppercase tracking-widest text-mono-9">
                 {section}
               </div>
             )}
@@ -140,7 +140,7 @@ function NavRow({
             <span
               className={cn(
                 'ml-auto rounded-full px-[7px] py-px font-mono text-[11px]',
-                isActive ? 'bg-mono-w/[0.16] text-mono-w' : 'bg-mono-f5 text-mono-9',
+                isActive ? 'bg-mono-w/16 text-mono-w' : 'bg-mono-f5 text-mono-9',
               )}
             >
               {badge}

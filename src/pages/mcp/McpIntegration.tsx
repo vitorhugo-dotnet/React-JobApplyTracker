@@ -87,7 +87,7 @@ function Code({ children }: { children: ReactNode }) {
 function CodeBlock({ code, subject }: { code: string; subject: string }) {
   return (
     <div className="mt-2.5 flex items-start gap-1 rounded border border-mono-e5 bg-mono-f5">
-      <pre className="min-w-0 flex-1 whitespace-pre-wrap break-words px-3 py-2.5 font-mono text-[12px] leading-[1.65] text-mono-1">
+      <pre className="min-w-0 flex-1 whitespace-pre-wrap wrap-break-word px-3 py-2.5 font-mono text-[12px] leading-[1.65] text-mono-1">
         <code>{code}</code>
       </pre>
       <div className="shrink-0 p-1.5">
