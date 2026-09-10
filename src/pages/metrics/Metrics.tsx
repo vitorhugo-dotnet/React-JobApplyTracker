@@ -104,7 +104,7 @@ export default function Metrics() {
             aria-label="Date range"
             value={range}
             onChange={(e) => setRange(e.target.value)}
-            className="cursor-pointer border-0 bg-transparent text-[12.5px] outline-none"
+            className="cursor-pointer border-0 bg-transparent text-[12.5px] outline-hidden"
           >
             {RANGES.map((r) => (
               <option key={r.value} value={r.value}>
@@ -173,7 +173,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="font-mono text-[24px] font-semibold leading-none">{value}</div>
-      <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.05em] text-mono-9">{label}</div>
+      <div className="mt-1.5 font-mono text-[10px] uppercase tracking-wider text-mono-9">{label}</div>
     </div>
   )
 }
