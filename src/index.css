@@ -1,6 +1,149 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-mono-0: var(--mono-0);
+  --color-mono-1: var(--mono-1);
+  --color-mono-2: var(--mono-2);
+  --color-mono-5: var(--mono-5);
+  --color-mono-9: var(--mono-9);
+  --color-mono-c: var(--mono-c);
+  --color-mono-e5: var(--mono-e5);
+  --color-mono-f5: var(--mono-f5);
+  --color-mono-w: var(--mono-w);
+
+  --color-danger: var(--danger);
+
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-highlight: var(--surface-highlight);
+
+  --font-sans: Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --radius: 4px;
+
+  --text-eyebrow: 10.5px;
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.08em;
+
+  --container-page: 1280px;
+  --container-form: 680px;
+  --container-settings: 760px;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility mono {
+  /* monospace numeric helper */
+  @apply font-mono;
+  font-feature-settings: 'tnum' 1;
+}
+
+@utility eyebrow {
+  @apply font-mono uppercase text-mono-9;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+}
+
+@utility btn {
+  /* ---- buttons ---- */
+  @apply inline-flex items-center gap-2 whitespace-nowrap rounded border border-mono-e5
+           bg-mono-w px-[13px] py-[7px] text-[13px] text-mono-1 transition-colors;
+  &:hover {
+    @apply bg-mono-f5;
+  }
+  &:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+}
+
+@utility btn-primary {
+  @apply border-mono-0 bg-mono-0 text-mono-w;
+  &:hover {
+    @apply bg-mono-2;
+  }
+}
+
+@utility btn-ghost {
+  @apply border-transparent bg-transparent;
+  &:hover {
+    @apply bg-mono-f5;
+  }
+}
+
+@utility btn-sm {
+  @apply px-[10px] py-[5px] text-[12.5px];
+}
+
+@utility field-input {
+  /* ---- form fields ---- */
+  @apply w-full rounded border border-mono-e5 bg-mono-w px-[11px] py-2 text-[13.5px]
+           text-mono-1 outline-hidden transition-colors;
+  &:focus {
+    @apply border-mono-2;
+  }
+  &::placeholder {
+    @apply text-mono-9;
+  }
+}
+
+@utility field-select {
+  @apply w-full rounded border border-mono-e5 bg-mono-w px-[11px] py-2 text-[13.5px]
+           text-mono-1 outline-hidden transition-colors;
+  &:focus {
+    @apply border-mono-2;
+  }
+  @apply cursor-pointer appearance-none pr-8;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--mono-9) 50%),
+    linear-gradient(135deg, var(--mono-9) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 52%,
+    calc(100% - 11px) 52%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+@utility card {
+  /* ---- cards / panels ---- */
+  @apply rounded border border-mono-e5 bg-mono-w;
+}
+
+@utility panel {
+  @apply overflow-hidden rounded border border-mono-e5 bg-mono-w;
+}
+
+@utility ph {
+  /* striped placeholder for imagery */
+  @apply grid place-items-center rounded text-center font-mono text-[11px] text-mono-9;
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--mono-f5) 0,
+    var(--mono-f5) 9px,
+    var(--mono-w) 9px,
+    var(--mono-w) 18px
+  );
+  border: 1px dashed var(--mono-c);
+}
 
 @layer base {
   :root {
@@ -68,89 +211,5 @@
   }
   *::-webkit-scrollbar-thumb:hover {
     @apply bg-mono-c;
-  }
-}
-
-@layer components {
-  /* monospace numeric helper */
-  .mono {
-    @apply font-mono;
-    font-feature-settings: 'tnum' 1;
-  }
-
-  .eyebrow {
-    @apply font-mono uppercase text-mono-9;
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-  }
-
-  /* ---- buttons ---- */
-  .btn {
-    @apply inline-flex items-center gap-2 whitespace-nowrap rounded border border-mono-e5
-           bg-mono-w px-[13px] py-[7px] text-[13px] text-mono-1 transition-colors;
-  }
-  .btn:hover {
-    @apply bg-mono-f5;
-  }
-  .btn-primary {
-    @apply border-mono-0 bg-mono-0 text-mono-w;
-  }
-  .btn-primary:hover {
-    @apply bg-mono-2;
-  }
-  .btn-ghost {
-    @apply border-transparent bg-transparent;
-  }
-  .btn-ghost:hover {
-    @apply bg-mono-f5;
-  }
-  .btn-sm {
-    @apply px-[10px] py-[5px] text-[12.5px];
-  }
-  .btn:disabled {
-    @apply cursor-not-allowed opacity-50;
-  }
-
-  /* ---- form fields ---- */
-  .field-input,
-  .field-select {
-    @apply w-full rounded border border-mono-e5 bg-mono-w px-[11px] py-2 text-[13.5px]
-           text-mono-1 outline-none transition-colors;
-  }
-  .field-input:focus,
-  .field-select:focus {
-    @apply border-mono-2;
-  }
-  .field-input::placeholder {
-    @apply text-mono-9;
-  }
-  .field-select {
-    @apply cursor-pointer appearance-none pr-8;
-    background-image: linear-gradient(45deg, transparent 50%, var(--mono-9) 50%),
-      linear-gradient(135deg, var(--mono-9) 50%, transparent 50%);
-    background-position: calc(100% - 16px) 52%, calc(100% - 11px) 52%;
-    background-size: 5px 5px, 5px 5px;
-    background-repeat: no-repeat;
-  }
-
-  /* ---- cards / panels ---- */
-  .card {
-    @apply rounded border border-mono-e5 bg-mono-w;
-  }
-  .panel {
-    @apply overflow-hidden rounded border border-mono-e5 bg-mono-w;
-  }
-
-  /* striped placeholder for imagery */
-  .ph {
-    @apply grid place-items-center rounded text-center font-mono text-[11px] text-mono-9;
-    background-image: repeating-linear-gradient(
-      45deg,
-      var(--mono-f5) 0,
-      var(--mono-f5) 9px,
-      var(--mono-w) 9px,
-      var(--mono-w) 18px
-    );
-    border: 1px dashed var(--mono-c);
   }
 }
