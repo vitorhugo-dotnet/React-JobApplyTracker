@@ -277,7 +277,7 @@ export default function ApplicationsList() {
                   setPage(0)
                 }}
                 placeholder="Search every field…"
-                className="w-full border-0 bg-transparent text-[13.5px] text-mono-1 outline-none placeholder:text-mono-9"
+                className="w-full border-0 bg-transparent text-[13.5px] text-mono-1 outline-hidden placeholder:text-mono-9"
               />
             </label>
             <Select
