@@ -24,7 +24,7 @@ export function Switch({ checked, onChange, id, 'aria-label': ariaLabel }: Switc
     >
       <span
         className={cn(
-          'absolute top-0.5 h-[18px] w-[18px] rounded-full bg-mono-w shadow-sm transition-[left]',
+          'absolute top-0.5 h-[18px] w-[18px] rounded-full bg-mono-w shadow-xs transition-[left]',
           checked ? 'left-[18px]' : 'left-0.5',
         )}
       />
