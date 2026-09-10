@@ -1,0 +1,86 @@
+name: Resolve PR 89 merge conflict (temporary)
+
+on:
+  push:
+    branches:
+      - chore/upgrade-tailwind-v4
+
+permissions:
+  contents: write
+
+jobs:
+  resolve:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: chore/upgrade-tailwind-v4
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Merge main and resolve dependency conflicts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin main
+          git show origin/main:package.json > /tmp/package-main.json
+
+          set +e
+          git merge --no-commit --no-ff origin/main
+          merge_status=$?
+          set -e
+
+          if [ "$merge_status" -ne 0 ]; then
+            unresolved=$(git diff --name-only --diff-filter=U)
+            unexpected=$(printf '%s\n' "$unresolved" | grep -vE '^(package.json|package-lock.json)$' || true)
+            if [ -n "$unexpected" ]; then
+              echo "Unexpected merge conflicts:"
+              printf '%s\n' "$unexpected"
+              exit 1
+            fi
+          fi
+
+          git checkout --ours package.json
+          node <<'NODE'
+          const fs = require('fs');
+          const ours = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const main = JSON.parse(fs.readFileSync('/tmp/package-main.json', 'utf8'));
+          ours.dependencies['react-dom'] = main.dependencies['react-dom'];
+          ours.devDependencies['@types/react-dom'] = main.devDependencies['@types/react-dom'];
+          fs.writeFileSync('package.json', JSON.stringify(ours, null, 2) + '\n');
+          NODE
+
+          rm -f package-lock.json
+          npm install --package-lock-only --ignore-scripts
+          git add package.json package-lock.json
+
+          if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
+            echo "Unresolved conflicts remain:"
+            git diff --name-only --diff-filter=U
+            exit 1
+          fi
+
+      - name: Verify dependencies and build
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm run build
+        env:
+          VITE_BASE_PATH: /
+
+      - name: Commit resolved merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          git commit -m "Merge main into chore/upgrade-tailwind-v4 and resolve dependency conflicts"
+          git push origin HEAD:chore/upgrade-tailwind-v4
