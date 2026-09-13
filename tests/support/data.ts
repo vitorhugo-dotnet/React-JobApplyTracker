@@ -107,10 +107,11 @@ export function seedApplications(): Application[] {
       recruiterDmReminderEnabled: true,
       recruiterDmSentAt: null,
       note: note ? 'Follow up with the hiring manager about timeline.' : null,
+      platform: id === 'app-2' ? 'LinkedIn' : undefined,
       archived: false,
       createdAt: day(appliedOffset ?? -1),
       updatedAt: day(0),
-    }
+    } as Application
   }
 }
 
