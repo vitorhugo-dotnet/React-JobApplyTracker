@@ -29,6 +29,7 @@ interface FormValues {
   nextStepDate: string
   nextStepTime: string
   note: string
+  platform: string
   baseResumeId: string
   toSendLater: boolean
   markDmSent: boolean
@@ -45,6 +46,7 @@ const EMPTY: FormValues = {
   nextStepDate: '',
   nextStepTime: '',
   note: '',
+  platform: '',
   baseResumeId: '',
   toSendLater: false,
   markDmSent: false,
@@ -69,6 +71,7 @@ function buildRequest(
     applicationDate: toApiDate(values.applicationDate),
     nextStepDateTime: nextStep,
     note: values.note.trim() || undefined,
+    platform: values.platform.trim() || undefined,
     interviewScheduled,
     recruiterDmReminderEnabled: reminderEnabled,
     rhAcceptedConnection,
@@ -132,6 +135,7 @@ export default function ApplicationForm() {
       nextStepDate: next ? `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}` : '',
       nextStepTime: next ? `${pad(next.getHours())}:${pad(next.getMinutes())}` : '',
       note: app.note ?? '',
+      platform: app.platform ?? '',
       baseResumeId: '',
       toSendLater: app.toSendLater ?? !app.applicationDate,
       markDmSent: !!app.recruiterDmSentAt,
@@ -176,10 +180,12 @@ export default function ApplicationForm() {
 
   return (
     <Page>
-      <PageHeader
-        title={isEdit ? 'Edit Application' : 'New Application'}
-        sub="Track a vacancy you're applying to"
-      />
+      <div className="mx-auto max-w-form">
+        <PageHeader
+          title={isEdit ? 'Edit Application' : 'New Application'}
+          sub="Track a vacancy you're applying to"
+        />
+      </div>
 
       <form onSubmit={onSubmit} className="mx-auto max-w-form">
         {isDirty && (
@@ -259,6 +265,9 @@ export default function ApplicationForm() {
               min={0}
               {...register('interviewCount', { valueAsNumber: true, min: 0 })}
             />
+          </Field>
+          <Field label="Platform" htmlFor="platform" hint="where you found this vacancy">
+            <Input id="platform" placeholder="e.g. LinkedIn" {...register('platform')} />
           </Field>
 
           <Field label="Note" full htmlFor="note">

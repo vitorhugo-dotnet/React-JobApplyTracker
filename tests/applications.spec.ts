@@ -204,6 +204,27 @@ test.describe('Status and archive independence', () => {
 })
 
 test.describe('Application form', () => {
+  test('loads and saves the platform when editing an application', async ({ page }) => {
+    await setupAuthed(page)
+    const updates: unknown[] = []
+    page.on('request', (request) => {
+      if (request.method() === 'PUT' && request.url().endsWith('/api/v1/applications/app-2')) {
+        updates.push(request.postDataJSON())
+      }
+    })
+
+    await page.goto('/applications/app-2/edit')
+
+    const platform = page.getByLabel('Platform')
+    await expect(platform).toHaveValue('LinkedIn')
+    await platform.fill('Wellfound')
+    await page.getByRole('button', { name: 'Save' }).click()
+
+    await expect(page).toHaveURL(/\/applications$/)
+    expect(updates).toHaveLength(1)
+    expect(updates[0]).toMatchObject({ platform: 'Wellfound' })
+  })
+
   test('creates an application and returns to the list', async ({ page }) => {
     await setupAuthed(page)
     await page.goto('/applications')
