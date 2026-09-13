@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { NoteIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/format'
@@ -6,8 +6,6 @@ import { familyOf, statusLabel, STATUS_FAMILY_BADGE, STATUS_FAMILY_DOT, STATUS_O
 import type { Application } from '@/types'
 
 export function ApplicationsBoard({ items }: { items: Application[] }) {
-  const navigate = useNavigate()
-
   return (
     <div className="grid auto-cols-[minmax(190px,1fr)] grid-flow-col gap-3 overflow-x-auto pb-2">
       {STATUS_OPTIONS.map(({ value: status, label }) => {
@@ -32,10 +30,9 @@ export function ApplicationsBoard({ items }: { items: Application[] }) {
                 <div className="p-2 text-center font-mono text-[11px] text-mono-c">empty</div>
               ) : (
                 cards.map((app) => (
-                  <button
+                  <Link
                     key={app.id}
-                    type="button"
-                    onClick={() => navigate(`/applications/${app.id}/edit`)}
+                    to={`/applications/${app.id}/edit`}
                     className="rounded border border-mono-e5 bg-mono-w p-[11px] text-left hover:border-mono-c"
                   >
                     <div className="text-[13px] font-semibold leading-tight">{app.vacancyName}</div>
@@ -52,7 +49,7 @@ export function ApplicationsBoard({ items }: { items: Application[] }) {
                         {formatDate(app.applicationDate)}
                       </span>
                     </div>
-                  </button>
+                  </Link>
                 ))
               )}
             </div>

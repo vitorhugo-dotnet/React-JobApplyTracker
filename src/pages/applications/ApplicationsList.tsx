@@ -549,7 +549,6 @@ export default function ApplicationsList() {
                 items={items}
                 sort={sortState}
                 onSort={onSortColumn}
-                onEdit={(app) => navigate(`/applications/${app.id}/edit`)}
                 onArchive={setPendingArchive}
                 onRestore={restore}
                 onDelete={setPendingDelete}
