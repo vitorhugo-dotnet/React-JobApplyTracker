@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Page, PageHeader, SectionLabel } from '@/components/ui/PageHeader'
-import { Segmented } from '@/components/ui/Segmented'
 import { CenteredSpinner, ErrorNote } from '@/components/ui/feedback'
 import { MetricCard, type Metric } from '@/components/dashboard/MetricCard'
 import { AchievementCard } from '@/components/dashboard/AchievementCard'
@@ -10,8 +9,6 @@ import { getDashboardSummary } from '@/api/dashboard'
 import { getApplications, getOverdue } from '@/api/applications'
 import { useGamificationStore } from '@/store/gamificationStore'
 import { TO_SEND_LATER_STATUS, type Application, type DashboardSummary } from '@/types'
-
-type Variant = 'standard' | 'gamified'
 
 function buildMetrics(summary: DashboardSummary, streakDays: number): Metric[] {
   const total = summary.totalApplications || 0
@@ -43,6 +40,12 @@ function buildMetrics(summary: DashboardSummary, streakDays: number): Metric[] {
       spark: pct(summary.rejectedCount),
     },
     {
+      label: 'Ghosting Rate',
+      value: `${pct(summary.ghostingCount)}%`,
+      foot: `${summary.ghostingCount} ghosted`,
+      spark: pct(summary.ghostingCount),
+    },
+    {
       label: 'Avg / Week',
       value: summary.averageWeeklyApplications.toFixed(1),
       foot: 'applications sent',
@@ -53,7 +56,6 @@ function buildMetrics(summary: DashboardSummary, streakDays: number): Metric[] {
 }
 
 export default function Dashboard() {
-  const [variant, setVariant] = useState<Variant>('standard')
   const profile = useGamificationStore((s) => s.profile)
   const achievements = useGamificationStore((s) => s.achievements)
 
@@ -82,29 +84,15 @@ export default function Dashboard() {
 
   return (
     <Page>
-      <PageHeader
-        title="Dashboard"
-        sub={`${today} · your job hunt at a glance`}
-        actions={
-          <Segmented<Variant>
-            aria-label="Dashboard variant"
-            options={[
-              { value: 'standard', label: 'Standard' },
-              { value: 'gamified', label: 'Gamified' },
-            ]}
-            value={variant}
-            onChange={setVariant}
-          />
-        }
-      />
+      <PageHeader title="Dashboard" sub={`${today} · your job hunt at a glance`} />
 
       {loading && <CenteredSpinner label="Loading dashboard…" />}
       {error && !loading && <ErrorNote message={error} />}
 
       {data && !loading && (
         <>
-          {variant === 'gamified' && profile && (
-            <div className="mb-[22px] flex items-center gap-6 rounded border border-mono-e5 px-[22px] py-5">
+          {profile && (
+            <div className="mb-[22px] flex flex-col items-start gap-6 rounded border border-mono-e5 px-[22px] py-5 sm:flex-row sm:items-center">
               <div className="flex shrink-0 flex-col gap-1">
                 <div className="eyebrow">Current rank</div>
                 <div className="text-[30px] font-bold tracking-[-0.02em]">Level {profile.level}</div>
@@ -121,7 +109,7 @@ export default function Dashboard() {
                     style={{ width: `${profile.progressPercentage}%` }}
                   />
                 </div>
-                <div className="mt-3.5 flex gap-5">
+                <div className="mt-3.5 flex flex-wrap gap-5">
                   <HeroStat value={profile.streakDays} label="Day streak" />
                   <HeroStat value={profile.currentLevelXp} label="Level XP" />
                   <HeroStat value={`${unlockedCount}/${achievements.length || 0}`} label="Achievements" />
@@ -131,14 +119,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div
-            className={
-              variant === 'standard'
-                ? 'grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7'
-                : 'grid grid-cols-2 gap-3 sm:grid-cols-4'
-            }
-          >
-            {(variant === 'standard' ? metrics : metrics.slice(0, 4)).map((m) => (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
+            {metrics.map((m) => (
               <MetricCard key={m.label} {...m} />
             ))}
           </div>
