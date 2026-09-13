@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { Link } from 'react-router-dom'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { Spinner } from '@/components/ui/feedback'
@@ -37,7 +38,6 @@ interface ApplicationsTableProps {
   items: Application[]
   sort: SortState
   onSort: (key: string) => void
-  onEdit: (app: Application) => void
   onArchive: (app: Application) => void
   onRestore: (app: Application) => void
   onDelete: (app: Application) => void
@@ -50,7 +50,6 @@ export function ApplicationsTable({
   items,
   sort,
   onSort,
-  onEdit,
   onArchive,
   onRestore,
   onDelete,
@@ -89,7 +88,12 @@ export function ApplicationsTable({
           {items.map((app) => (
             <tr key={app.id} className="group border-b border-mono-e5 last:border-b-0 hover:bg-mono-f5">
               <td className="px-3.5 py-[11px] align-middle">
-                <div className="font-medium text-mono-1">{app.vacancyName}</div>
+                <Link
+                  to={`/applications/${app.id}/edit`}
+                  className="font-medium text-mono-1 hover:underline"
+                >
+                  {app.vacancyName}
+                </Link>
                 <div className="text-xs text-mono-9">{app.organization || '—'}</div>
               </td>
               <td className="px-3.5 py-[11px] align-middle">{app.recruiterName || '—'}</td>
@@ -113,9 +117,14 @@ export function ApplicationsTable({
               </td>
               <td className="px-3.5 py-[11px] align-middle">
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                  <RowAction title="Edit" onClick={() => onEdit(app)}>
+                  <Link
+                    to={`/applications/${app.id}/edit`}
+                    title="Edit"
+                    aria-label="Edit"
+                    className="grid h-[26px] w-[26px] place-items-center rounded border border-transparent text-mono-9 hover:border-mono-e5 hover:bg-mono-w hover:text-mono-1"
+                  >
                     <EditIcon />
-                  </RowAction>
+                  </Link>
                   {archived ? (
                     <RowAction
                       title="Restore"

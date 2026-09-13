@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/feedback'
@@ -17,18 +17,15 @@ interface ApplicationsCardsProps {
 
 /** Card-per-application layout used on mobile / narrow viewports. */
 export function ApplicationsCards({ items, archived, onRestore, busyId }: ApplicationsCardsProps) {
-  const navigate = useNavigate()
-
   return (
     <div className="flex flex-col gap-2.5">
       {items.map((app) => {
         const busy = busyId === app.id
         return (
           <div key={app.id} className="rounded border border-mono-e5">
-            <button
-              type="button"
-              onClick={() => navigate(`/applications/${app.id}/edit`)}
-              className="w-full rounded p-3 text-left hover:bg-mono-f5"
+            <Link
+              to={`/applications/${app.id}/edit`}
+              className="block w-full rounded p-3 text-left hover:bg-mono-f5"
             >
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
@@ -52,7 +49,7 @@ export function ApplicationsCards({ items, archived, onRestore, busyId }: Applic
                   </span>
                 )}
               </div>
-            </button>
+            </Link>
             {archived && onRestore && (
               <div className="flex justify-end border-t border-mono-e5 px-3 py-2">
                 <Button

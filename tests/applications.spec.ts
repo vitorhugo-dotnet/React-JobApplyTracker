@@ -11,6 +11,21 @@ test.describe('Applications list', () => {
     await expect(page.getByRole('cell', { name: 'Priya Nayar' })).toBeVisible()
   })
 
+  test('exposes each table application as a bookmarkable detail link', async ({ page }) => {
+    await setupAuthed(page)
+    await page.goto('/applications')
+
+    const row = page.getByRole('row', { name: /Senior Frontend Engineer/ })
+    await expect(row.getByRole('link', { name: 'Senior Frontend Engineer' })).toHaveAttribute(
+      'href',
+      '/applications/app-1/edit',
+    )
+    await expect(row.getByRole('link', { name: 'Edit' })).toHaveAttribute(
+      'href',
+      '/applications/app-1/edit',
+    )
+  })
+
   test('filters by recruiter via search', async ({ page }) => {
     await setupAuthed(page)
     await page.goto('/applications')
