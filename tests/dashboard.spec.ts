@@ -19,13 +19,21 @@ test.describe('Dashboard', () => {
     await expect(page.getByRole('heading', { name: 'Overdue Follow-ups' })).toBeVisible()
   })
 
-  test('the gamified variant reveals the level hero card', async ({ page }) => {
-    await page.getByRole('tab', { name: 'Gamified' }).click()
+  test('shows gamification progress and Ghosting Rate in the unified dashboard', async ({ page }) => {
     await expect(page.getByText('Current rank')).toBeVisible()
     await expect(page.getByText('Day streak')).toBeVisible()
+    await expect(page.getByText('Ghosting Rate')).toBeVisible()
+    await expect(page.getByText('8%', { exact: true })).toBeVisible()
+    await expect(page.getByText('3 ghosted')).toBeVisible()
+    await expect(page.getByRole('tab', { name: 'Standard' })).not.toBeVisible()
+    await expect(page.getByRole('tab', { name: 'Gamified' })).not.toBeVisible()
+  })
+
+  test('does not show a global search field in the top bar', async ({ page }) => {
+    await expect(page.getByPlaceholder('Search…')).not.toBeVisible()
   })
 
   test('the sidebar shows the XP/level indicator', async ({ page }) => {
-    await expect(page.getByText('Level 7')).toBeVisible()
+    await expect(page.getByRole('complementary').getByText('Level 7')).toBeVisible()
   })
 })

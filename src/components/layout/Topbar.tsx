@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CoffeeIcon, CollapseIcon, SearchIcon } from '@/components/ui/icons'
+import { CoffeeIcon, CollapseIcon } from '@/components/ui/icons'
 import { toggleTheme } from '@/lib/theme'
 import { useAuthStore } from '@/store/authStore'
 import { BUY_ME_A_COFFEE_URL } from './externalLinks'
@@ -79,19 +79,6 @@ export function Topbar({ root, leaf, onToggleSidebar }: TopbarProps) {
       </nav>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* search — hidden on mobile */}
-        <label className="hidden md:flex w-[210px] items-center gap-2 rounded border border-mono-e5 px-2.5 py-1.5 text-[13px] text-mono-9">
-          <SearchIcon />
-          <input
-            type="search"
-            placeholder="Search…"
-            className="w-full border-0 bg-transparent text-[13px] text-mono-1 outline-hidden placeholder:text-mono-9"
-          />
-          <span className="rounded border border-mono-e5 border-b-2 bg-surface-subtle px-1.5 py-px font-mono text-[11px] text-mono-5">
-            ⌘K
-          </span>
-        </label>
-
         {/* support — desktop only */}
         <a
           href={BUY_ME_A_COFFEE_URL}
