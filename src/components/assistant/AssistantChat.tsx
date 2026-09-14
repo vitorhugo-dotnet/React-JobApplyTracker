@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import { streamAssistantMessage, type AssistantSource } from '@/api/assistant'
 import { SendIcon } from '@/components/ui/icons'
+import { loadAssistantHistory, saveAssistantHistory, type AssistantMessage } from '@/lib/assistantHistory'
 import { cn } from '@/lib/utils'
 
-interface Message {
-  id: number
-  role: 'user' | 'assistant'
-  content: string
-  sources?: AssistantSource[]
-  failed?: boolean
-  prompt?: string
+const assistantHtmlSchema = {
+  ...defaultSchema,
+  tagNames: defaultSchema.tagNames?.filter((tag) => tag !== 'img'),
 }
 
 const SUGGESTIONS = [
@@ -35,7 +35,8 @@ interface AssistantChatProps {
 export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<AssistantMessage[]>([])
+  const [historyLoaded, setHistoryLoaded] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const activeAnswerRef = useRef<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -53,6 +54,22 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
       abortRef.current?.abort()
     }
   }, [onClose])
+  useEffect(() => {
+    let active = true
+    loadAssistantHistory()
+      .then((history) => {
+        if (!active) return
+        setMessages(history)
+        sequence.current = Math.max(0, ...history.map((message) => message.id))
+      })
+      .finally(() => {
+        if (active) setHistoryLoaded(true)
+      })
+    return () => { active = false }
+  }, [])
+  useEffect(() => {
+    if (historyLoaded) saveAssistantHistory(messages).catch(() => {})
+  }, [historyLoaded, messages])
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
@@ -162,7 +179,21 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
               'max-w-[86%] rounded-lg p-3 text-[13px] whitespace-pre-wrap',
               message.role === 'user' ? 'bg-mono-0 text-mono-w' : 'bg-mono-f5',
             )}>
-              <p>{message.content || <span className="animate-pulse text-mono-9">Thinking…</span>}</p>
+              {message.content
+                ? message.role === 'assistant'
+                  ? (
+                      <ReactMarkdown
+                        rehypePlugins={[rehypeRaw, [rehypeSanitize, assistantHtmlSchema]]}
+                        components={{
+                          a: ({ children, ...props }) => <a {...props} className="underline" target="_blank" rel="noreferrer">{children}</a>,
+                          code: ({ children, className }) => <code className={cn('rounded bg-mono-e5 px-1 font-mono text-[12px]', className)}>{children}</code>,
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    )
+                  : <p>{message.content}</p>
+                : <span className="animate-pulse text-mono-9">Thinking…</span>}
               {!!message.sources?.length && (
                 <div className="mt-2 border-t border-mono-e5 pt-2 text-[10px] text-mono-9">
                   {message.sources.map((source) => SOURCE_LABELS[source]).join(' · ')}
@@ -184,7 +215,7 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
             <button
               key={suggestion}
               type="button"
-              disabled={streaming}
+              disabled={streaming || !historyLoaded}
               onClick={() => void send(suggestion)}
               className="shrink-0 rounded-full border border-mono-e5 px-2.5 py-1 text-[10px] hover:bg-mono-f5 disabled:opacity-50"
             >
@@ -197,7 +228,7 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
             ref={inputRef}
             value={input}
             maxLength={4000}
-            disabled={streaming}
+            disabled={streaming || !historyLoaded}
             onChange={(event) => setInput(event.target.value)}
             placeholder="Ask about your applications…"
             aria-label="Message"
@@ -206,7 +237,7 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
           <button
             type="submit"
             aria-label="Send message"
-            disabled={!input.trim() || streaming}
+            disabled={!input.trim() || streaming || !historyLoaded}
             className="grid h-9 w-9 shrink-0 place-items-center rounded bg-mono-0 text-mono-w disabled:cursor-not-allowed disabled:opacity-40"
           >
             <SendIcon size={14} />

@@ -16,6 +16,11 @@ export interface SyncQueueItem {
   retries: number
 }
 
+export interface AssistantHistoryEntry {
+  key: string
+  data: string
+}
+
 interface AppDB extends DBSchema {
   apiCache: {
     key: string
@@ -27,19 +32,28 @@ interface AppDB extends DBSchema {
     value: SyncQueueItem
     indexes: { createdAt: number }
   }
+  assistantHistory: {
+    key: string
+    value: AssistantHistoryEntry
+  }
 }
 
 let _db: IDBPDatabase<AppDB> | null = null
 
 export async function getDb(): Promise<IDBPDatabase<AppDB>> {
   if (_db) return _db
-  _db = await openDB<AppDB>('applywell', 1, {
-    upgrade(db) {
-      const cache = db.createObjectStore('apiCache', { keyPath: 'key' })
-      cache.createIndex('timestamp', 'timestamp')
+  _db = await openDB<AppDB>('applywell', 2, {
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
+        const cache = db.createObjectStore('apiCache', { keyPath: 'key' })
+        cache.createIndex('timestamp', 'timestamp')
 
-      const queue = db.createObjectStore('syncQueue', { keyPath: 'id' })
-      queue.createIndex('createdAt', 'createdAt')
+        const queue = db.createObjectStore('syncQueue', { keyPath: 'id' })
+        queue.createIndex('createdAt', 'createdAt')
+      }
+      if (oldVersion < 2) {
+        db.createObjectStore('assistantHistory', { keyPath: 'key' })
+      }
     },
   })
   return _db
