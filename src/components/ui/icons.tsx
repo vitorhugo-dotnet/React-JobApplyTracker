@@ -183,6 +183,14 @@ export const SettingsIcon = (p: IconProps) => (
   </svg>
 )
 
+export const HelpIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" />
+    <path d="M5.7 5.6C5.9 4.5 6.8 3.8 7.9 3.8C9.2 3.8 10.2 4.6 10.2 5.8C10.2 7.6 8 7.4 8 9" stroke="currentColor" strokeLinecap="round" />
+    <circle cx="8" cy="11.2" r="0.7" fill="currentColor" />
+  </svg>
+)
+
 /* ---- achievement shapes (geometric only) ---- */
 export type ShapeName = 'square' | 'circle' | 'diamond' | 'triangle' | 'ring' | 'bolt'
 
