@@ -12,7 +12,7 @@ import {
 } from './offlineStore'
 import { enqueueOfflineMutation, type SyncQueueItem } from './syncQueue'
 
-function resolveBaseUrl(): string {
+export function resolveBaseUrl(): string {
   const configured = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL
   const base = (configured || 'http://localhost:8080').replace(/\/+$/, '')
   if (base.endsWith('/api/v1')) return base
@@ -43,6 +43,30 @@ api.interceptors.request.use((config) => {
 
 // Single-flight refresh: concurrent 401s share one refresh round-trip.
 let refreshPromise: Promise<string> | null = null
+
+export function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post<{ accessToken: string }>(
+        `${api.defaults.baseURL}${REFRESH_ENDPOINT}`,
+        {},
+        { withCredentials: true },
+      )
+      .then((res) => {
+        const token = res.data.accessToken
+        useAuthStore.getState().setTokens(token)
+        return token
+      })
+      .catch((error) => {
+        useAuthStore.getState().logout()
+        throw error
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
+}
 
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean }
 
@@ -118,28 +142,7 @@ api.interceptors.response.use(
 
     original._retry = true
 
-    if (!refreshPromise) {
-      refreshPromise = axios
-        .post<{ accessToken: string }>(
-          `${api.defaults.baseURL}${REFRESH_ENDPOINT}`,
-          {},
-          { withCredentials: true },
-        )
-        .then((res) => {
-          const token = res.data.accessToken
-          useAuthStore.getState().setTokens(token)
-          return token
-        })
-        .catch((refreshError) => {
-          useAuthStore.getState().logout()
-          throw refreshError
-        })
-        .finally(() => {
-          refreshPromise = null
-        })
-    }
-
-    const token = await refreshPromise
+    const token = await refreshAccessToken()
     original.headers.Authorization = `Bearer ${token}`
     return api(original)
   },

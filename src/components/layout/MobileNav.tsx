@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { CoffeeIcon } from '@/components/ui/icons'
+import { ChatIcon, CoffeeIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { BUY_ME_A_COFFEE_URL } from './externalLinks'
 import { NAV_ITEMS } from './navigation'
 
-export function MobileNav() {
+export function MobileNav({ onOpenAssistant }: { onOpenAssistant: () => void }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -20,6 +20,17 @@ export function MobileNav() {
       <div className="fixed bottom-5 right-5 z-50 flex flex-col-reverse items-end gap-2.5">
         {open && (
           <div className="flex flex-col-reverse gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                onOpenAssistant()
+              }}
+              className="flex items-center gap-2.5 rounded-full border border-mono-0 bg-mono-0 px-3.5 py-2 text-[13px] font-medium text-mono-w shadow-lg"
+            >
+              <span className="grid h-4 w-4 shrink-0 place-items-center"><ChatIcon size={14} /></span>
+              Ask ApplyWell
+            </button>
             <a
               href={BUY_ME_A_COFFEE_URL}
               target="_blank"
