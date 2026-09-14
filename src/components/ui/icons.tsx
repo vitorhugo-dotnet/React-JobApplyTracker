@@ -130,6 +130,21 @@ export const CoffeeIcon = (p: IconProps) => (
   </svg>
 )
 
+export const ChatIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M2 2.5H13V10.5H7L3.5 13V10.5H2V2.5Z" stroke="currentColor" strokeLinejoin="round" />
+    <circle cx="5" cy="6.5" r="0.7" fill="currentColor" />
+    <circle cx="7.5" cy="6.5" r="0.7" fill="currentColor" />
+    <circle cx="10" cy="6.5" r="0.7" fill="currentColor" />
+  </svg>
+)
+
+export const SendIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M1.5 2L13.5 7.5L1.5 13L3.5 8.5L9 7.5L3.5 6.5L1.5 2Z" fill="currentColor" stroke="currentColor" strokeLinejoin="round" />
+  </svg>
+)
+
 /* ---- sidebar nav icons ---- */
 export const DashboardIcon = (p: IconProps) => (
   <svg {...base(p)}>

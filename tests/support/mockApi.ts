@@ -72,6 +72,19 @@ export async function installMockApi(page: Page, options: MockOptions = {}): Pro
     // ---- github ----
     if (path === '/github/profile') return json(route, MOCK_GITHUB_PROFILE)
 
+    // ---- Ask ApplyWell (POST SSE) ----
+    if (path === '/assistant/chat' && method === 'POST') {
+      const body = request.postDataJSON() as { message: string }
+      const events = body.message === 'trigger error'
+        ? 'event: error\ndata: {"message":"Assistant provider is unavailable"}\n\n'
+        : [
+            'event: token\ndata: {"content":"You have "}\n\n',
+            'event: token\ndata: {"content":"24 applications."}\n\n',
+            'event: complete\ndata: {"sources":["APPLICATION_STATS"]}\n\n',
+          ].join('')
+      return route.fulfill({ status: 200, contentType: 'text/event-stream', body: events })
+    }
+
     // ---- google drive / resumes ----
     if (path === '/google-drive/base-resumes' && method === 'GET') return json(route, [])
     if (path === '/google-drive/status') return json(route, { connected: false })

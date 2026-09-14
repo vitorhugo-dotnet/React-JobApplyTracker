@@ -5,9 +5,21 @@ import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileNav } from './MobileNav'
 import { breadcrumbFor } from './navigation'
+import { AssistantChat } from '@/components/assistant/AssistantChat'
+import { AssistantLauncher } from '@/components/assistant/AssistantLauncher'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [assistantOpen, setAssistantOpen] = useState(false)
+  const isMobile = useIsMobile()
+  const closeAssistant = () => {
+    setAssistantOpen(false)
+    window.setTimeout(() => {
+      const selector = isMobile ? '[aria-label="Open navigation"]' : '[aria-label="Open Ask ApplyWell"]'
+      document.querySelector<HTMLElement>(selector)?.focus()
+    })
+  }
   const { pathname } = useLocation()
   const { root, leaf } = breadcrumbFor(pathname)
 
@@ -29,8 +41,10 @@ export function AppLayout() {
         </main>
       </div>
       <div className="md:hidden">
-        <MobileNav />
+        <MobileNav onOpenAssistant={() => setAssistantOpen(true)} />
       </div>
+      {!assistantOpen && <AssistantLauncher onOpen={() => setAssistantOpen(true)} />}
+      {assistantOpen && <AssistantChat mobile={isMobile} onClose={closeAssistant} />}
     </div>
   )
 }
