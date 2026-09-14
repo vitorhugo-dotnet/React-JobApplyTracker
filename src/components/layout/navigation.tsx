@@ -3,6 +3,7 @@ import {
   ApplicationsIcon,
   DashboardIcon,
   DownloadIcon,
+  HelpIcon,
   MetricsIcon,
   PlugIcon,
   SettingsIcon,
@@ -24,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Exports', to: '/exports', section: 'Workspace', icon: DownloadIcon },
   { label: 'Developer Tools', to: '/developer', section: 'System', glyph: '</>' },
   { label: 'MCP', to: '/mcp', section: 'System', icon: PlugIcon },
+  { label: 'Help', to: '/help', section: 'System', icon: HelpIcon },
   { label: 'Account Settings', to: '/account', section: 'System', icon: SettingsIcon },
 ]
 
