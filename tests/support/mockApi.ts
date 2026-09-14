@@ -75,9 +75,17 @@ export async function installMockApi(page: Page, options: MockOptions = {}): Pro
     // ---- Ask ApplyWell (POST SSE) ----
     if (path === '/assistant/chat' && method === 'POST') {
       const body = request.postDataJSON() as { message: string }
+      if (body.message === 'slow response') {
+        await new Promise((resolve) => setTimeout(resolve, 1_000))
+      }
       const events = body.message === 'trigger error'
         ? 'event: error\ndata: {"message":"Assistant provider is unavailable"}\n\n'
-        : [
+        : body.message === 'render rich content'
+          ? [
+              'event: token\ndata: {"content":"This is **important**. [ApplyWell](https://applywell.hugojava.dev/) <strong>Safe HTML</strong><script>alert(1)</script><img src=x onerror=alert(1)>"}\n\n',
+              'event: complete\ndata: {"sources":[]}\n\n',
+            ].join('')
+          : [
             'event: token\ndata: {"content":"You have "}\n\n',
             'event: token\ndata: {"content":"24 applications."}\n\n',
             'event: complete\ndata: {"sources":["APPLICATION_STATS"]}\n\n',
