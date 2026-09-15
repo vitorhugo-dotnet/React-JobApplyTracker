@@ -137,8 +137,34 @@ jobs:
         env:
           VITE_BASE_PATH: /
 
-      - name: Deploy to Cloudflare Workers
+      - name: Upload web artifact
         if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Download web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist
+
+      - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
