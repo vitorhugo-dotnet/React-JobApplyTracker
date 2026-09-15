@@ -72,6 +72,25 @@ test.describe('Ask ApplyWell assistant', () => {
     await expect(page.getByRole('dialog', { name: 'Ask ApplyWell' }).getByText('You have 24 applications.')).toBeVisible()
   })
 
+  test('clears the persisted conversation', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await setupAuthed(page)
+    await page.goto('/dashboard')
+    await page.getByRole('button', { name: 'Open Ask ApplyWell' }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'Ask ApplyWell' })
+    await dialog.getByPlaceholder('Ask about your applications…').fill('How many applications?')
+    await dialog.getByRole('button', { name: 'Send message' }).click()
+    await expect(dialog.getByText('You have 24 applications.')).toBeVisible()
+
+    await dialog.getByRole('button', { name: 'Clear conversation' }).click()
+    await expect(dialog.getByText('How many applications?')).toBeHidden()
+
+    await page.reload()
+    await page.getByRole('button', { name: 'Open Ask ApplyWell' }).click()
+    await expect(page.getByRole('dialog', { name: 'Ask ApplyWell' }).getByText('How many applications?')).toBeHidden()
+  })
+
   test('preserves a prompt when the page reloads during a response', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await setupAuthed(page)
