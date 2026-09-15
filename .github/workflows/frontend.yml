@@ -23,6 +23,7 @@ on:
 permissions:
   contents: read
   packages: read
+  deployments: write
 
 concurrency:
   group: frontend-${{ github.workflow }}-${{ github.ref }}
@@ -150,8 +151,12 @@ jobs:
     needs: build
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) }}
     runs-on: ubuntu-latest
+    environment:
+      name: Cloudflare Pages
+      url: https://applywell.hugojava.dev
     permissions:
       contents: read
+      deployments: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -170,3 +175,15 @@ jobs:
           wranglerVersion: "4"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: deploy
+
+      - name: Health check
+        run: |
+          curl --fail --show-error --silent \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 3 \
+            --connect-timeout 10 \
+            --max-time 30 \
+            https://applywell.hugojava.dev/
