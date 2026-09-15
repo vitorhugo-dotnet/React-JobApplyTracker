@@ -9,6 +9,7 @@ export function getInitialTheme(): Theme {
 export function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle('dark', theme === 'dark')
   localStorage.setItem('theme', theme)
+  document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute('href', `/favicon-${theme}.svg`)
 }
 
 export function toggleTheme(): Theme {

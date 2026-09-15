@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import { streamAssistantMessage, type AssistantSource } from '@/api/assistant'
+import { BrandLogo } from '@/components/layout/BrandLogo'
 import { SendIcon } from '@/components/ui/icons'
 import { loadAssistantHistory, saveAssistantHistory, type AssistantMessage } from '@/lib/assistantHistory'
 import { cn } from '@/lib/utils'
@@ -157,7 +158,7 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
         >
           {mobile ? '←' : '×'}
         </button>
-        <img src="/applywell-logo.svg" alt="" className="h-7 w-7" />
+        <BrandLogo compact />
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-[14px] font-semibold">Ask ApplyWell</h2>
           <p className="text-[11px] text-mono-9">AI assistant · Read-only</p>

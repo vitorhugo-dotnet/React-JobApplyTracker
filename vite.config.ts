@@ -26,7 +26,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // Use the manifest we manage ourselves
       manifest: false,
-      includeAssets: ['favicon.svg', 'icons.svg', 'applywell-logo.svg', 'og-image.png'],
+      includeAssets: ['favicon-light.svg', 'favicon-dark.svg', 'icons.svg', 'applywell-mark-dark.svg', 'applywell-mark-light.svg', 'og-image.png'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff,woff2}'],
         // Never cache API routes — the app layer handles that via IndexedDB
