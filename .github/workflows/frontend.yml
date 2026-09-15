@@ -116,8 +116,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      pages: write
-      id-token: write
 
     steps:
       - name: Checkout
@@ -139,32 +137,9 @@ jobs:
         env:
           VITE_BASE_PATH: /
 
-      - name: Create SPA fallback page
-        run: cp dist/index.html dist/404.html
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Deploy to Cloudflare Workers
         if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) }}
-
-      - name: Upload Pages artifact
-        if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) }}
-        uses: actions/upload-pages-artifact@v3
+        uses: cloudflare/wrangler-action@v3
         with:
-          path: dist
-
-  deploy:
-    name: Deploy
-    needs: build
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) }}
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: 'https://applywell.hugojava.dev'
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
