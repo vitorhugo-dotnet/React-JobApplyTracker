@@ -15,7 +15,7 @@ test.describe('Ask ApplyWell assistant', () => {
 
     await expect(dialog.getByText('You have 24 applications.')).toBeVisible()
     await expect(dialog.getByText('Application statistics')).toBeVisible()
-    await expect(dialog.getByText('Powered by Gemini')).toBeVisible()
+    await expect(dialog.getByText('Powered by Gemini')).toBeHidden()
     await expect(dialog.getByRole('button', { name: 'Send message' })).toBeDisabled()
     await dialog.getByRole('button', { name: 'Close Ask ApplyWell' }).click()
     await expect(dialog).toBeHidden()

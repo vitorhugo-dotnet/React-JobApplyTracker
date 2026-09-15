@@ -243,7 +243,6 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
             <SendIcon size={14} />
           </button>
         </form>
-        <p className="mt-1.5 text-center text-[9px] text-mono-9">Powered by Gemini</p>
       </div>
     </section>
   )
