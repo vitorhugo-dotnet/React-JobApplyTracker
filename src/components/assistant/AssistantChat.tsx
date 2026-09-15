@@ -129,6 +129,15 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
     void send(input)
   }
 
+  const clearConversation = () => {
+    abortRef.current?.abort()
+    abortRef.current = null
+    activeAnswerRef.current = null
+    setStreaming(false)
+    setInput('')
+    setMessages([])
+  }
+
   return (
     <section
       role="dialog"
@@ -153,6 +162,15 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
           <h2 className="truncate text-[14px] font-semibold">Ask ApplyWell</h2>
           <p className="text-[11px] text-mono-9">AI assistant · Read-only</p>
         </div>
+        <button
+          type="button"
+          aria-label="Clear conversation"
+          disabled={!historyLoaded || messages.length === 0}
+          onClick={clearConversation}
+          className="text-[11px] underline disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Clear
+        </button>
         {streaming && (
           <button type="button" onClick={stop} aria-label="Stop response" className="text-[11px] underline">
             Stop
