@@ -3,6 +3,7 @@ import { cn, initials } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useGamificationStore } from '@/store/gamificationStore'
 import { NAV_ITEMS, type NavItem } from './navigation'
+import { BrandLogo } from './BrandLogo'
 
 interface SidebarProps {
   collapsed: boolean
@@ -29,14 +30,7 @@ export function Sidebar({ collapsed, activeCount }: SidebarProps) {
           collapsed ? 'justify-center px-0' : 'px-4',
         )}
       >
-        <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[5px] bg-mono-0 text-sm font-bold text-mono-w">
-          A
-        </div>
-        {!collapsed && (
-          <div className="whitespace-nowrap text-[14.5px] font-semibold tracking-[-0.01em]">
-            Applywell
-          </div>
-        )}
+        <BrandLogo compact={collapsed} />
       </div>
 
       {/* nav */}

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { BrandLogo } from '@/components/layout/BrandLogo'
 
 interface AuthShellProps {
   title: string
@@ -12,7 +13,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
     <div className="flex min-h-screen items-center justify-center bg-mono-w px-4">
       <div className="w-full max-w-[380px]">
         <div className="mb-7">
-          <img src="/applywell-logo.svg" alt="Applywell — Smart job application tracking" className="h-12 w-auto" />
+          <BrandLogo className="text-xl" />
         </div>
 
         <h1 className="text-[22px] font-bold tracking-[-0.02em]">{title}</h1>
