@@ -162,7 +162,7 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: 'https://applywell.hugojava.dev'
 
     steps:
       - name: Deploy to GitHub Pages
