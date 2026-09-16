@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { login } from '@/api/auth'
@@ -22,18 +22,13 @@ export default function Login() {
   const [passkeyBusy, setPasskeyBusy] = useState(false)
   const passkeySupported = isPasskeySupported()
 
-  const emailRef = useRef<HTMLInputElement | null>(null)
-
   const {
     register,
     handleSubmit,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ defaultValues: { email: '', password: '' } })
 
   const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/dashboard'
-
-  const { ref: emailRhfRef, ...emailRegister } = register('email', { required: 'Email is required' })
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null)
@@ -48,16 +43,9 @@ export default function Login() {
 
   const onPasskey = async () => {
     setSubmitError(null)
-    const email = getValues('email').trim()
-    if (!email) {
-      emailRef.current?.focus()
-      emailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setSubmitError('Enter your email address above, then sign in with a passkey.')
-      return
-    }
     setPasskeyBusy(true)
     try {
-      const result = await loginWithPasskey(email)
+      const result = await loginWithPasskey()
       if (!result) {
         setSubmitError('No passkey is registered for this account.')
         return
@@ -98,11 +86,7 @@ export default function Login() {
             autoComplete="email"
             placeholder="you@example.com"
             aria-invalid={!!errors.email}
-            {...emailRegister}
-            ref={(el) => {
-              emailRhfRef(el)
-              emailRef.current = el
-            }}
+            {...register('email', { required: 'Email is required' })}
           />
         </Field>
 
