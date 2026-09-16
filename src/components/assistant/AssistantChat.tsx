@@ -46,15 +46,19 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
 
   useEffect(() => {
     inputRef.current?.focus()
+  }, [])
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => {
       document.removeEventListener('keydown', onKeyDown)
-      abortRef.current?.abort()
     }
   }, [onClose])
+  useEffect(() => () => {
+    abortRef.current?.abort()
+  }, [])
   useEffect(() => {
     let active = true
     loadAssistantHistory()

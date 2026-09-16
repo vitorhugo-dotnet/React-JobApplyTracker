@@ -22,6 +22,55 @@ test.describe('Ask ApplyWell assistant', () => {
     await expect(page.getByRole('button', { name: 'Open Ask ApplyWell' })).toBeFocused()
   })
 
+  test('retries the assistant request after refreshing an expired access token', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await setupAuthed(page)
+
+    const refreshedToken = 'mock-refreshed-access-token'
+    let assistantAttempts = 0
+    let refreshAttempts = 0
+
+    await page.route('**/api/v1/assistant/chat', async (route) => {
+      assistantAttempts += 1
+      if (assistantAttempts === 1) {
+        return route.fulfill({
+          status: 403,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Forbidden' }),
+        })
+      }
+
+      expect(route.request().headers().authorization).toBe(`Bearer ${refreshedToken}`)
+      const events = [
+        'event: token\ndata: {"content":"You have "}\n\n',
+        'event: token\ndata: {"content":"24 applications."}\n\n',
+        'event: complete\ndata: {"sources":["APPLICATION_STATS"]}\n\n',
+      ].join('')
+      return route.fulfill({ status: 200, contentType: 'text/event-stream', body: events })
+    })
+
+    await page.route('**/api/v1/auth/refresh', async (route) => {
+      refreshAttempts += 1
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ accessToken: refreshedToken }),
+      })
+    })
+
+    await page.goto('/dashboard')
+    await page.getByRole('button', { name: 'Open Ask ApplyWell' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Ask ApplyWell' })
+
+    await dialog.getByPlaceholder('Ask about your applications…').fill('How many applications?')
+    await dialog.getByRole('button', { name: 'Send message' }).click()
+
+    await expect(dialog.getByText('You have 24 applications.')).toBeVisible()
+    await expect(dialog.getByText('Thinking…')).toBeHidden()
+    expect(refreshAttempts).toBe(1)
+    expect(assistantAttempts).toBe(2)
+  })
+
   test('opens as a full-screen chat from the mobile Speed Dial', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await setupAuthed(page)
