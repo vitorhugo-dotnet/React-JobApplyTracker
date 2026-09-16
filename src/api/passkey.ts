@@ -45,12 +45,12 @@ export async function registerPasskey(): Promise<void> {
 }
 
 /**
- * Authenticate with a passkey for the given email. Returns the auth session on
- * success, or `null` when the account has no passkey enrolled.
+ * Authenticate with a discoverable passkey. The authenticator identifies the
+ * account from the credential, so no email/username is required up front.
  */
-export async function loginWithPasskey(email: string): Promise<AuthResponse | null> {
+export async function loginWithPasskey(): Promise<AuthResponse | null> {
   const options = await unwrap(
-    api.post<PasskeyOptionsResponse>('/auth/passkey/login/options', { email }),
+    api.post<PasskeyOptionsResponse>('/auth/passkey/login/options', {}),
   )
   if (options.passkeyAvailable === false) return null
 
