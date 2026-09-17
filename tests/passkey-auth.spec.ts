@@ -56,6 +56,28 @@ test.describe('Passkey authentication', () => {
     await expect(page.getByText('No passkey is registered for this account.')).toBeVisible()
   })
 
+  test('browser rejects a sibling hostname RP ID with SecurityError', async ({ page }) => {
+    await setupGuest(page)
+    await page.goto('/login')
+
+    const exceptionName = await page.evaluate(async () => {
+      try {
+        await navigator.credentials.get({
+          publicKey: {
+            challenge: new Uint8Array([1, 2, 3, 4]),
+            rpId: 'jobapply-api.hugojava.dev',
+            timeout: 1000,
+          },
+        })
+        return null
+      } catch (error) {
+        return error instanceof DOMException ? error.name : String(error)
+      }
+    })
+
+    expect(exceptionName).toBe('SecurityError')
+  })
+
   test('decodes WebAuthn request options and sends the assertion to verify', async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(window, 'PublicKeyCredential', {
