@@ -109,14 +109,13 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
 
   useEffect(() => {
     const hasActiveCountdown = messages.some((message) =>
-      message.failed && message.retryAvailableAt && message.retryAvailableAt > Date.now(),
+      message.failed && message.retryAvailableAt && message.retryAvailableAt > now,
     )
     if (!hasActiveCountdown) return
 
-    setNow(Date.now())
-    const timer = window.setInterval(() => setNow(Date.now()), 250)
-    return () => window.clearInterval(timer)
-  }, [messages])
+    const timer = window.setTimeout(() => setNow(Date.now()), 250)
+    return () => window.clearTimeout(timer)
+  }, [messages, now])
 
   const runRequest = async (userId: number, answerId: number, prompt: string) => {
     const conversationId = conversationIdRef.current
