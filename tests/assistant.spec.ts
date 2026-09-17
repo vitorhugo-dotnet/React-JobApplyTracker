@@ -104,6 +104,83 @@ test.describe('Ask ApplyWell assistant', () => {
     await expect(dialog.getByRole('button', { name: 'Retry' })).toBeVisible()
   })
 
+  test('marks the originating user message as failed and retries it without duplication', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await setupAuthed(page)
+
+    let attempts = 0
+    const conversationIds: string[] = []
+    await page.route('**/api/v1/assistant/chat', async (route) => {
+      attempts += 1
+      const body = route.request().postDataJSON() as { message: string; conversationId?: string }
+      conversationIds.push(body.conversationId ?? '')
+
+      if (attempts === 1) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'text/event-stream',
+          body: 'event: error\ndata: {"code":"PROVIDER_UNAVAILABLE","message":"Assistant provider is unavailable"}\n\n',
+        })
+      }
+
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: [
+          'event: token\ndata: {"content":"Recovered."}\n\n',
+          'event: complete\ndata: {"sources":[]}\n\n',
+        ].join(''),
+      })
+    })
+
+    await page.goto('/dashboard')
+    await page.getByRole('button', { name: 'Open Ask ApplyWell' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Ask ApplyWell' })
+
+    await dialog.getByPlaceholder('Ask about your applications…').fill('retry me')
+    await dialog.getByRole('button', { name: 'Send message' }).click()
+
+    await expect(dialog.getByLabel('Message failed')).toBeVisible()
+    const retry = dialog.getByRole('button', { name: 'Retry message' })
+    await expect(retry).toBeVisible()
+    await retry.click()
+
+    await expect(dialog.getByText('Recovered.')).toBeVisible()
+    await expect(dialog.getByText('retry me')).toHaveCount(1)
+    await expect(dialog.getByLabel('Message failed')).toBeHidden()
+    expect(attempts).toBe(2)
+    expect(conversationIds[0]).toMatch(/^[0-9a-f-]{36}$/)
+    expect(conversationIds[1]).toBe(conversationIds[0])
+  })
+
+  test('uses the provider retry delay for a manual rate-limit countdown', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await setupAuthed(page)
+
+    let attempts = 0
+    await page.route('**/api/v1/assistant/chat', async (route) => {
+      attempts += 1
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: 'event: error\ndata: {"code":"RATE_LIMITED","message":"Gemini rate limit exceeded","retryAfterSeconds":2}\n\n',
+      })
+    })
+
+    await page.goto('/dashboard')
+    await page.getByRole('button', { name: 'Open Ask ApplyWell' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Ask ApplyWell' })
+
+    await dialog.getByPlaceholder('Ask about your applications…').fill('rate limited')
+    await dialog.getByRole('button', { name: 'Send message' }).click()
+
+    const retry = dialog.getByRole('button', { name: 'Retry message' })
+    await expect(retry).toBeDisabled()
+    await expect(dialog.getByText(/Rate limit reached\. Try again in [12]s\./)).toBeVisible()
+    await expect(retry).toBeEnabled({ timeout: 4_000 })
+    expect(attempts).toBe(1)
+  })
+
   test('restores a completed conversation after a page reload', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await setupAuthed(page)

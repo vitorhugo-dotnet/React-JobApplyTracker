@@ -145,6 +145,21 @@ export const SendIcon = (p: IconProps) => (
   </svg>
 )
 
+export const ErrorIcon = (p: IconProps) => (
+  <svg {...base({ size: 12, ...p })}>
+    <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" />
+    <line x1="7.5" y1="4" x2="7.5" y2="8.5" stroke="currentColor" strokeLinecap="round" />
+    <circle cx="7.5" cy="11" r="0.7" fill="currentColor" />
+  </svg>
+)
+
+export const RetryIcon = (p: IconProps) => (
+  <svg {...base({ size: 12, ...p })}>
+    <path d="M12.5 5.5A5.5 5.5 0 1 0 13 9" stroke="currentColor" strokeLinecap="round" />
+    <path d="M12.5 2.5V5.5H9.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
 /* ---- sidebar nav icons ---- */
 export const DashboardIcon = (p: IconProps) => (
   <svg {...base(p)}>

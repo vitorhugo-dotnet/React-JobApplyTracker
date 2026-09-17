@@ -2,9 +2,14 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
-import { streamAssistantMessage, type AssistantSource } from '@/api/assistant'
+import {
+  AssistantStreamError,
+  streamAssistantMessage,
+  type AssistantErrorCode,
+  type AssistantSource,
+} from '@/api/assistant'
 import { BrandLogo } from '@/components/layout/BrandLogo'
-import { SendIcon } from '@/components/ui/icons'
+import { ErrorIcon, RetryIcon, SendIcon } from '@/components/ui/icons'
 import { loadAssistantHistory, saveAssistantHistory, type AssistantMessage } from '@/lib/assistantHistory'
 import { cn } from '@/lib/utils'
 
@@ -33,13 +38,27 @@ interface AssistantChatProps {
   onClose: () => void
 }
 
+function retrySeconds(message: AssistantMessage, now: number): number {
+  if (!message.retryAvailableAt) return 0
+  return Math.max(0, Math.ceil((message.retryAvailableAt - now) / 1000))
+}
+
+function failureLabel(message: AssistantMessage, remainingSeconds: number): string {
+  if (message.errorCode !== 'RATE_LIMITED') return 'Message failed.'
+  if (remainingSeconds > 0) return 'Rate limit reached. Try again in ' + remainingSeconds + 's.'
+  if (message.retryAvailableAt) return 'Rate limit reached. You can retry now.'
+  return 'Rate limit reached. Try again.'
+}
+
 export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [messages, setMessages] = useState<AssistantMessage[]>([])
   const [historyLoaded, setHistoryLoaded] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
   const abortRef = useRef<AbortController | null>(null)
   const activeAnswerRef = useRef<number | null>(null)
+  const conversationIdRef = useRef<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sequence = useRef(0)
@@ -47,6 +66,7 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -56,64 +76,134 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [onClose])
+
   useEffect(() => () => {
     abortRef.current?.abort()
   }, [])
+
   useEffect(() => {
     let active = true
     loadAssistantHistory()
       .then((history) => {
         if (!active) return
-        setMessages(history)
-        sequence.current = Math.max(0, ...history.map((message) => message.id))
+        conversationIdRef.current = history.conversationId
+        setMessages(history.messages)
+        sequence.current = Math.max(0, ...history.messages.map((message) => message.id))
       })
       .finally(() => {
         if (active) setHistoryLoaded(true)
       })
     return () => { active = false }
   }, [])
+
   useEffect(() => {
-    if (historyLoaded) saveAssistantHistory(messages).catch(() => {})
+    const conversationId = conversationIdRef.current
+    if (historyLoaded && conversationId) {
+      saveAssistantHistory(conversationId, messages).catch(() => {})
+    }
   }, [historyLoaded, messages])
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  const send = async (rawPrompt: string) => {
-    const prompt = rawPrompt.trim()
-    if (!prompt || streaming) return
-    const userId = ++sequence.current
-    const answerId = ++sequence.current
+  useEffect(() => {
+    const hasActiveCountdown = messages.some((message) =>
+      message.failed && message.retryAvailableAt && message.retryAvailableAt > now,
+    )
+    if (!hasActiveCountdown) return
+
+    const timer = window.setTimeout(() => setNow(Date.now()), 250)
+    return () => window.clearTimeout(timer)
+  }, [messages, now])
+
+  const runRequest = async (userId: number, answerId: number, prompt: string) => {
+    const conversationId = conversationIdRef.current
+    if (!conversationId) return
+
     activeAnswerRef.current = answerId
-    setInput('')
     setStreaming(true)
-    setMessages((current) => [
-      ...current,
-      { id: userId, role: 'user', content: prompt },
-      { id: answerId, role: 'assistant', content: '', prompt },
-    ])
+    setMessages((current) => current.map((message) =>
+      message.id === answerId
+        ? { ...message, content: '', sources: undefined }
+        : message,
+    ))
+
     const controller = new AbortController()
     abortRef.current = controller
     try {
-      await streamAssistantMessage(prompt, {
+      await streamAssistantMessage(conversationId, prompt, {
         onToken: (content) => setMessages((current) => current.map((message) =>
           message.id === answerId ? { ...message, content: message.content + content } : message,
         )),
-        onComplete: (sources) => setMessages((current) => current.map((message) =>
-          message.id === answerId ? { ...message, sources } : message,
-        )),
+        onComplete: (sources) => setMessages((current) => current.map((message) => {
+          if (message.id === answerId) return { ...message, sources }
+          if (message.id === userId) {
+            return {
+              ...message,
+              failed: undefined,
+              errorCode: undefined,
+              retryAvailableAt: undefined,
+            }
+          }
+          return message
+        })),
       }, controller.signal)
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
-        setMessages((current) => current.map((message) => message.id === answerId
-          ? { ...message, content: 'The assistant is temporarily unavailable.', failed: true }
-          : message))
+        const providerError = error instanceof AssistantStreamError
+          ? error
+          : new AssistantStreamError('PROVIDER_UNAVAILABLE', 'Assistant provider is unavailable')
+        const errorCode: AssistantErrorCode = providerError.code
+        const retryAvailableAt = providerError.retryAfterSeconds === undefined
+          ? undefined
+          : Date.now() + providerError.retryAfterSeconds * 1000
+        const responseText = errorCode === 'RATE_LIMITED'
+          ? 'Gemini rate limit exceeded.'
+          : 'The assistant is temporarily unavailable.'
+
+        setNow(Date.now())
+        setMessages((current) => current.map((message) => {
+          if (message.id === userId) {
+            return {
+              ...message,
+              failed: true,
+              errorCode,
+              retryAvailableAt,
+            }
+          }
+          if (message.id === answerId) {
+            return { ...message, content: responseText, sources: undefined }
+          }
+          return message
+        }))
       }
     } finally {
       if (abortRef.current === controller) abortRef.current = null
       if (activeAnswerRef.current === answerId) activeAnswerRef.current = null
       setStreaming(false)
     }
+  }
+
+  const send = async (rawPrompt: string) => {
+    const prompt = rawPrompt.trim()
+    if (!prompt || streaming || !conversationIdRef.current) return
+
+    const userId = ++sequence.current
+    const answerId = ++sequence.current
+    setInput('')
+    setMessages((current) => [
+      ...current,
+      { id: userId, role: 'user', content: prompt, responseId: answerId },
+      { id: answerId, role: 'assistant', content: '', prompt },
+    ])
+    await runRequest(userId, answerId, prompt)
+  }
+
+  const retry = async (message: AssistantMessage) => {
+    if (streaming || !message.failed || message.responseId === undefined) return
+    if (retrySeconds(message, Date.now()) > 0) return
+    await runRequest(message.id, message.responseId, message.content)
   }
 
   const stop = () => {
@@ -138,6 +228,7 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
     abortRef.current?.abort()
     abortRef.current = null
     activeAnswerRef.current = null
+    conversationIdRef.current = crypto.randomUUID()
     setStreaming(false)
     setInput('')
     setMessages([])
@@ -193,43 +284,67 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
           </div>
         </div>
 
-        {messages.map((message) => (
-          <div key={message.id} className={cn('flex', message.role === 'user' ? 'justify-end' : 'gap-2.5')}>
-            {message.role === 'assistant' && (
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-mono-e5 text-xs">◆</span>
-            )}
-            <div className={cn(
-              'max-w-[86%] rounded-lg p-3 text-[13px] whitespace-pre-wrap',
-              message.role === 'user' ? 'bg-mono-0 text-mono-w' : 'bg-mono-f5',
-            )}>
-              {message.content
-                ? message.role === 'assistant'
-                  ? (
-                      <ReactMarkdown
-                        rehypePlugins={[rehypeRaw, [rehypeSanitize, assistantHtmlSchema]]}
-                        components={{
-                          a: ({ children, ...props }) => <a {...props} className="underline" target="_blank" rel="noreferrer">{children}</a>,
-                          code: ({ children, className }) => <code className={cn('rounded bg-mono-e5 px-1 font-mono text-[12px]', className)}>{children}</code>,
-                        }}
-                      >
-                        {message.content}
-                      </ReactMarkdown>
-                    )
-                  : <p>{message.content}</p>
-                : <span className="animate-pulse text-mono-9">Thinking…</span>}
-              {!!message.sources?.length && (
-                <div className="mt-2 border-t border-mono-e5 pt-2 text-[10px] text-mono-9">
-                  {message.sources.map((source) => SOURCE_LABELS[source]).join(' · ')}
+        {messages.map((message) => {
+          const remainingSeconds = retrySeconds(message, now)
+          return (
+            <div key={message.id} className={cn('flex', message.role === 'user' ? 'justify-end' : 'gap-2.5')}>
+              {message.role === 'assistant' && (
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-mono-e5 text-xs">◆</span>
+              )}
+              {message.role === 'user' ? (
+                <div className="flex max-w-[86%] flex-col items-end gap-1">
+                  <div className={cn(
+                    'rounded-lg bg-mono-0 p-3 text-[13px] whitespace-pre-wrap text-mono-w',
+                    message.failed && 'ring-1 ring-red-500',
+                  )}>
+                    <p>{message.content}</p>
+                  </div>
+                  {message.failed && (
+                    <div className="flex max-w-full items-center justify-end gap-1.5 text-[10px] text-red-600">
+                      <span role="status" aria-label="Message failed" className="inline-flex shrink-0">
+                        <ErrorIcon />
+                      </span>
+                      <span>{failureLabel(message, remainingSeconds)}</span>
+                      {message.responseId !== undefined && (
+                        <button
+                          type="button"
+                          aria-label="Retry message"
+                          disabled={streaming || remainingSeconds > 0}
+                          onClick={() => void retry(message)}
+                          className="inline-flex shrink-0 items-center gap-1 underline disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <RetryIcon />
+                          <span>Retry</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="max-w-[86%] rounded-lg bg-mono-f5 p-3 text-[13px] whitespace-pre-wrap">
+                  {message.content
+                    ? (
+                        <ReactMarkdown
+                          rehypePlugins={[rehypeRaw, [rehypeSanitize, assistantHtmlSchema]]}
+                          components={{
+                            a: ({ children, ...props }) => <a {...props} className="underline" target="_blank" rel="noreferrer">{children}</a>,
+                            code: ({ children, className }) => <code className={cn('rounded bg-mono-e5 px-1 font-mono text-[12px]', className)}>{children}</code>,
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      )
+                    : <span className="animate-pulse text-mono-9">Thinking…</span>}
+                  {!!message.sources?.length && (
+                    <div className="mt-2 border-t border-mono-e5 pt-2 text-[10px] text-mono-9">
+                      {message.sources.map((source) => SOURCE_LABELS[source]).join(' · ')}
+                    </div>
+                  )}
                 </div>
               )}
-              {message.failed && message.prompt && (
-                <button type="button" aria-label="Retry" onClick={() => void send(message.prompt!)} className="mt-2 underline">
-                  Retry
-                </button>
-              )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="shrink-0 border-t border-mono-e5 bg-mono-w p-3">

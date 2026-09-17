@@ -9,12 +9,37 @@ export type AssistantSource =
   | 'APPLICATION_TIMELINE'
   | 'DASHBOARD_SUMMARY'
 
+export type AssistantErrorCode = 'RATE_LIMITED' | 'PROVIDER_UNAVAILABLE'
+
+interface AssistantErrorPayload {
+  code?: AssistantErrorCode
+  message?: string
+  retryAfterSeconds?: number
+}
+
+export class AssistantStreamError extends Error {
+  readonly code: AssistantErrorCode
+  readonly retryAfterSeconds?: number
+
+  constructor(code: AssistantErrorCode, message: string, retryAfterSeconds?: number) {
+    super(message)
+    this.name = 'AssistantStreamError'
+    this.code = code
+    this.retryAfterSeconds = retryAfterSeconds
+  }
+}
+
 interface StreamHandlers {
   onToken: (content: string) => void
   onComplete: (sources: AssistantSource[]) => void
 }
 
-async function request(message: string, signal: AbortSignal, token: string | null) {
+async function request(
+  conversationId: string,
+  message: string,
+  signal: AbortSignal,
+  token: string | null,
+) {
   return fetch(`${resolveBaseUrl()}/assistant/chat`, {
     method: 'POST',
     credentials: 'include',
@@ -24,23 +49,24 @@ async function request(message: string, signal: AbortSignal, token: string | nul
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ conversationId, message }),
   })
 }
 
 export async function streamAssistantMessage(
+  conversationId: string,
   message: string,
   handlers: StreamHandlers,
   signal: AbortSignal,
 ): Promise<void> {
-  let response = await request(message, signal, useAuthStore.getState().accessToken)
+  let response = await request(conversationId, message, signal, useAuthStore.getState().accessToken)
   if ([401, 403].includes(response.status)) {
     const token = await refreshAccessToken()
-    response = await request(message, signal, token)
+    response = await request(conversationId, message, signal, token)
   }
   if (!response.ok || !response.body) throw new Error('Assistant request failed')
 
-  let providerError: Error | null = null
+  let providerError: AssistantStreamError | null = null
   let completed = false
   const parser = createSseParser((event, raw) => {
     if (event === 'token') handlers.onToken((raw as { content?: string }).content ?? '')
@@ -48,7 +74,20 @@ export async function streamAssistantMessage(
       completed = true
       handlers.onComplete((raw as { sources?: AssistantSource[] }).sources ?? [])
     }
-    if (event === 'error') providerError = new Error('Assistant provider is unavailable')
+    if (event === 'error') {
+      const payload = raw as AssistantErrorPayload
+      const code = payload.code === 'RATE_LIMITED' ? 'RATE_LIMITED' : 'PROVIDER_UNAVAILABLE'
+      const retryAfterSeconds = typeof payload.retryAfterSeconds === 'number'
+        && Number.isFinite(payload.retryAfterSeconds)
+        && payload.retryAfterSeconds >= 0
+        ? Math.ceil(payload.retryAfterSeconds)
+        : undefined
+      providerError = new AssistantStreamError(
+        code,
+        payload.message ?? 'Assistant provider is unavailable',
+        retryAfterSeconds,
+      )
+    }
   })
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
