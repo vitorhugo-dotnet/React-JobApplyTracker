@@ -119,7 +119,7 @@ test.describe('Ask ApplyWell assistant', () => {
         return route.fulfill({
           status: 200,
           contentType: 'text/event-stream',
-          body: 'event: error\\ndata: {"code":"PROVIDER_UNAVAILABLE","message":"Assistant provider is unavailable"}\\n\\n',
+          body: 'event: error\ndata: {"code":"PROVIDER_UNAVAILABLE","message":"Assistant provider is unavailable"}\n\n',
         })
       }
 
@@ -127,8 +127,8 @@ test.describe('Ask ApplyWell assistant', () => {
         status: 200,
         contentType: 'text/event-stream',
         body: [
-          'event: token\\ndata: {"content":"Recovered."}\\n\\n',
-          'event: complete\\ndata: {"sources":[]}\\n\\n',
+          'event: token\ndata: {"content":"Recovered."}\n\n',
+          'event: complete\ndata: {"sources":[]}\n\n',
         ].join(''),
       })
     })
@@ -163,7 +163,7 @@ test.describe('Ask ApplyWell assistant', () => {
       return route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
-        body: 'event: error\\ndata: {"code":"RATE_LIMITED","message":"Gemini rate limit exceeded","retryAfterSeconds":2}\\n\\n',
+        body: 'event: error\ndata: {"code":"RATE_LIMITED","message":"Gemini rate limit exceeded","retryAfterSeconds":2}\n\n',
       })
     })
 
