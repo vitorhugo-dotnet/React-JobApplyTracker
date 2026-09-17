@@ -53,9 +53,14 @@ export default function Login() {
       setSession(result.accessToken, result.user)
       navigate(from, { replace: true })
     } catch (error) {
-      // A cancelled WebAuthn prompt rejects with a DOMException — stay silent.
-      if (error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
-        return
+      if (error instanceof DOMException) {
+        // User cancellation is an expected WebAuthn outcome, not an application error.
+        if (error.name === 'NotAllowedError' || error.name === 'AbortError') {
+          return
+        }
+
+        // Keep diagnostics useful without logging request options, challenges, or credentials.
+        console.error(`[passkey] WebAuthn sign-in failed: ${error.name}: ${error.message}`)
       }
       setSubmitError(authErrorMessage(error, 'Could not sign in with a passkey.'))
     } finally {
