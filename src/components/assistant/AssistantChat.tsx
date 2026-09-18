@@ -11,6 +11,7 @@ import {
 } from '@/api/assistant'
 import { BrandLogo } from '@/components/layout/BrandLogo'
 import { ErrorIcon, RetryIcon, SendIcon } from '@/components/ui/icons'
+import { createAssistantConversationId, ensureAssistantConversationId } from '@/lib/assistantConversation'
 import { loadAssistantHistory, saveAssistantHistory, type AssistantMessage } from '@/lib/assistantHistory'
 import { cn } from '@/lib/utils'
 
@@ -119,8 +120,8 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
   }, [messages, now])
 
   const runRequest = async (userId: number, answerId: number, prompt: string) => {
-    const conversationId = conversationIdRef.current
-    if (!conversationId) return
+    const conversationId = ensureAssistantConversationId(conversationIdRef.current)
+    conversationIdRef.current = conversationId
 
     activeAnswerRef.current = answerId
     setStreaming(true)
@@ -189,7 +190,7 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
 
   const send = async (rawPrompt: string) => {
     const prompt = rawPrompt.trim()
-    if (!prompt || streaming || !conversationIdRef.current) return
+    if (!prompt || streaming) return
 
     const userId = ++sequence.current
     const answerId = ++sequence.current
@@ -230,7 +231,7 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
     abortRef.current?.abort()
     abortRef.current = null
     activeAnswerRef.current = null
-    conversationIdRef.current = crypto.randomUUID()
+    conversationIdRef.current = createAssistantConversationId()
     setStreaming(false)
     setInput('')
     setMessages([])
