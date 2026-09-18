@@ -1,4 +1,5 @@
-import { isValidAssistantConversationId, type AssistantErrorCode, type AssistantSource } from '@/api/assistant'
+import { type AssistantErrorCode, type AssistantSource } from '@/api/assistant'
+import { createAssistantConversationId, isValidAssistantConversationId } from '@/lib/assistantConversation'
 import { decryptData, encryptData, getEncryptionKey } from '@/lib/crypto'
 import { getDb } from '@/lib/db'
 import { useAuthStore } from '@/store/authStore'
@@ -31,7 +32,7 @@ function getHistoryKey(): { storageKey: string; encryptionKey: Promise<CryptoKey
 
 function newHistory(messages: AssistantMessage[] = []): AssistantHistoryState {
   return {
-    conversationId: crypto.randomUUID(),
+    conversationId: createAssistantConversationId(),
     messages,
   }
 }
@@ -40,11 +41,11 @@ export async function loadAssistantHistory(): Promise<AssistantHistoryState> {
   const key = getHistoryKey()
   if (!key) return newHistory()
 
-  const db = await getDb()
-  const entry = await db.get('assistantHistory', key.storageKey)
-  if (!entry) return newHistory()
-
   try {
+    const db = await getDb()
+    const entry = await db.get('assistantHistory', key.storageKey)
+    if (!entry) return newHistory()
+
     const stored = await decryptData<unknown>(entry.data, await key.encryptionKey)
     if (Array.isArray(stored)) return newHistory(stored as AssistantMessage[])
 
