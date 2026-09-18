@@ -22,6 +22,108 @@ test.describe('Ask ApplyWell assistant', () => {
     await expect(page.getByRole('button', { name: 'Open Ask ApplyWell' })).toBeFocused()
   })
 
+  test('reuses the same conversation ID for subsequent messages', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await setupAuthed(page)
+
+    const requests: Array<{ conversationId?: string; message: string }> = []
+    await page.route('**/api/v1/assistant/chat', async (route) => {
+      const body = route.request().postDataJSON() as { conversationId?: string; message: string }
+      requests.push(body)
+      const answer = body.message === 'first message' ? 'First answer.' : 'Second answer.'
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: [
+          `event: token\\ndata: {"content":"${answer}"}\\n\\n`,
+          'event: complete\\ndata: {"sources":[]}\\n\\n',
+        ].join(''),
+      })
+    })
+
+    await page.goto('/dashboard')
+    await page.getByRole('button', { name: 'Open Ask ApplyWell' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Ask ApplyWell' })
+    const input = dialog.getByPlaceholder('Ask about your applications…')
+
+    await input.fill('first message')
+    await dialog.getByRole('button', { name: 'Send message' }).click()
+    await expect(dialog.getByText('First answer.')).toBeVisible()
+
+    await input.fill('second message')
+    await dialog.getByRole('button', { name: 'Send message' }).click()
+    await expect(dialog.getByText('Second answer.')).toBeVisible()
+
+    expect(requests).toHaveLength(2)
+    expect(requests[0].conversationId).toMatch(/^[0-9a-f-]{36}$/)
+    expect(requests[1].conversationId).toBe(requests[0].conversationId)
+  })
+
+  test('regenerates an invalid persisted conversation ID before sending', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await setupAuthed(page)
+    await page.goto('/dashboard')
+
+    await page.evaluate(async () => {
+      const [{ getDb }, { encryptData, getEncryptionKey }] = await Promise.all([
+        import('/src/lib/db.ts'),
+        import('/src/lib/crypto.ts'),
+      ])
+      const db = await getDb()
+      const key = await getEncryptionKey('user-1')
+      await db.put('assistantHistory', {
+        key: 'assistant-history:user-1',
+        data: await encryptData({ conversationId: '', messages: [] }, key),
+      })
+    })
+
+    let sentConversationId: string | undefined
+    await page.route('**/api/v1/assistant/chat', async (route) => {
+      const body = route.request().postDataJSON() as { conversationId?: string; message: string }
+      sentConversationId = body.conversationId
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: [
+          'event: token\\ndata: {"content":"Recovered conversation."}\\n\\n',
+          'event: complete\\ndata: {"sources":[]}\\n\\n',
+        ].join(''),
+      })
+    })
+
+    await page.getByRole('button', { name: 'Open Ask ApplyWell' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Ask ApplyWell' })
+    await dialog.getByPlaceholder('Ask about your applications…').fill('hello')
+    await dialog.getByRole('button', { name: 'Send message' }).click()
+
+    await expect(dialog.getByText('Recovered conversation.')).toBeVisible()
+    expect(sentConversationId).toMatch(/^[0-9a-f-]{36}$/)
+  })
+
+  test('shows a clean UI error for HTTP validation failures before SSE starts', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await setupAuthed(page)
+
+    await page.route('**/api/v1/assistant/chat', async (route) => {
+      return route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          fieldErrors: { conversationId: 'Conversation ID is required' },
+        }),
+      })
+    })
+
+    await page.goto('/dashboard')
+    await page.getByRole('button', { name: 'Open Ask ApplyWell' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Ask ApplyWell' })
+    await dialog.getByPlaceholder('Ask about your applications…').fill('trigger validation')
+    await dialog.getByRole('button', { name: 'Send message' }).click()
+
+    await expect(dialog.getByText('The assistant request could not be sent. Please try again.')).toBeVisible()
+    await expect(dialog.getByText('Thinking…')).toBeHidden()
+  })
+
   test('retries the assistant request after refreshing an expired access token', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await setupAuthed(page)
