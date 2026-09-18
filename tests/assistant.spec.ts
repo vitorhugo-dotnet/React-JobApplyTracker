@@ -35,8 +35,8 @@ test.describe('Ask ApplyWell assistant', () => {
         status: 200,
         contentType: 'text/event-stream',
         body: [
-          `event: token\\ndata: {"content":"${answer}"}\\n\\n`,
-          'event: complete\\ndata: {"sources":[]}\\n\\n',
+          `event: token\ndata: {"content":"${answer}"}\n\n`,
+          'event: complete\ndata: {"sources":[]}\n\n',
         ].join(''),
       })
     })
@@ -85,8 +85,8 @@ test.describe('Ask ApplyWell assistant', () => {
         status: 200,
         contentType: 'text/event-stream',
         body: [
-          'event: token\\ndata: {"content":"Recovered conversation."}\\n\\n',
-          'event: complete\\ndata: {"sources":[]}\\n\\n',
+          'event: token\ndata: {"content":"Recovered conversation."}\n\n',
+          'event: complete\ndata: {"sources":[]}\n\n',
         ].join(''),
       })
     })
