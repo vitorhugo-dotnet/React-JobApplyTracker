@@ -80,7 +80,7 @@ test.describe('Ask ApplyWell conversation regression', () => {
         status: 200,
         contentType: 'text/event-stream',
         body: [
-          `event: token\\ndata: {"content":"answer for ${body.message}"}\\n\\n`,
+          `event: token\ndata: {"content":"answer for ${body.message}"}\n\n`,
           'event: complete\ndata: {"sources":[]}\n\n',
         ].join(''),
       })
