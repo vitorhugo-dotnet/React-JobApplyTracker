@@ -66,8 +66,8 @@ test.describe('Ask ApplyWell assistant', () => {
 
     await page.evaluate(async () => {
       const [{ getDb }, { encryptData, getEncryptionKey }] = await Promise.all([
-        import('../src/lib/db.ts'),
-        import('../src/lib/crypto.ts'),
+        import('../src/lib/db'),
+        import('../src/lib/crypto'),
       ])
       const db = await getDb()
       const key = await getEncryptionKey('user-1')
