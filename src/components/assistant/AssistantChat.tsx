@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import {
+  AssistantRequestError,
   AssistantStreamError,
   streamAssistantMessage,
   type AssistantErrorCode,
@@ -151,16 +152,17 @@ export function AssistantChat({ mobile, onClose }: AssistantChatProps) {
       }, controller.signal)
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
-        const providerError = error instanceof AssistantStreamError
-          ? error
-          : new AssistantStreamError('PROVIDER_UNAVAILABLE', 'Assistant provider is unavailable')
-        const errorCode: AssistantErrorCode = providerError.code
-        const retryAvailableAt = providerError.retryAfterSeconds === undefined
+        const requestError = error instanceof AssistantRequestError
+        const providerError = error instanceof AssistantStreamError ? error : null
+        const errorCode: AssistantErrorCode | undefined = providerError?.code
+        const retryAvailableAt = providerError?.retryAfterSeconds === undefined
           ? undefined
           : Date.now() + providerError.retryAfterSeconds * 1000
-        const responseText = errorCode === 'RATE_LIMITED'
-          ? 'Gemini rate limit exceeded.'
-          : 'The assistant is temporarily unavailable.'
+        const responseText = requestError
+          ? 'The assistant request could not be sent. Please try again.'
+          : errorCode === 'RATE_LIMITED'
+            ? 'Gemini rate limit exceeded.'
+            : 'The assistant is temporarily unavailable.'
 
         setNow(Date.now())
         setMessages((current) => current.map((message) => {

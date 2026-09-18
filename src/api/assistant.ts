@@ -2,6 +2,12 @@ import { refreshAccessToken, resolveBaseUrl } from '@/lib/api'
 import { createSseParser } from '@/lib/sse'
 import { useAuthStore } from '@/store/authStore'
 
+const ASSISTANT_CONVERSATION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function isValidAssistantConversationId(value: unknown): value is string {
+  return typeof value === 'string' && ASSISTANT_CONVERSATION_ID_PATTERN.test(value)
+}
+
 export type AssistantSource =
   | 'APPLICATION_SEARCH'
   | 'APPLICATION_DETAIL'
@@ -26,6 +32,16 @@ export class AssistantStreamError extends Error {
     this.name = 'AssistantStreamError'
     this.code = code
     this.retryAfterSeconds = retryAfterSeconds
+  }
+}
+
+export class AssistantRequestError extends Error {
+  readonly status?: number
+
+  constructor(message: string, status?: number) {
+    super(message)
+    this.name = 'AssistantRequestError'
+    this.status = status
   }
 }
 
@@ -59,12 +75,17 @@ export async function streamAssistantMessage(
   handlers: StreamHandlers,
   signal: AbortSignal,
 ): Promise<void> {
+  if (!isValidAssistantConversationId(conversationId)) {
+    throw new AssistantRequestError('Assistant conversation is unavailable')
+  }
+
   let response = await request(conversationId, message, signal, useAuthStore.getState().accessToken)
   if ([401, 403].includes(response.status)) {
     const token = await refreshAccessToken()
     response = await request(conversationId, message, signal, token)
   }
-  if (!response.ok || !response.body) throw new Error('Assistant request failed')
+  if (!response.ok) throw new AssistantRequestError('Assistant request failed', response.status)
+  if (!response.body) throw new AssistantRequestError('Assistant response stream unavailable', response.status)
 
   let providerError: AssistantStreamError | null = null
   let completed = false

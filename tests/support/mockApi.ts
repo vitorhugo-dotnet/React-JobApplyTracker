@@ -74,7 +74,10 @@ export async function installMockApi(page: Page, options: MockOptions = {}): Pro
 
     // ---- Ask ApplyWell (POST SSE) ----
     if (path === '/assistant/chat' && method === 'POST') {
-      const body = request.postDataJSON() as { message: string }
+      const body = request.postDataJSON() as { conversationId?: string; message: string }
+      if (!body.conversationId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.conversationId)) {
+        return json(route, { fieldErrors: { conversationId: 'Conversation ID is required' } }, 400)
+      }
       if (body.message === 'slow response') {
         await new Promise((resolve) => setTimeout(resolve, 1_000))
       }
