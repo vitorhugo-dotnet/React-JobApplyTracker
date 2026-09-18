@@ -1,12 +1,7 @@
 import { refreshAccessToken, resolveBaseUrl } from '@/lib/api'
+import { isValidAssistantConversationId } from '@/lib/assistantConversation'
 import { createSseParser } from '@/lib/sse'
 import { useAuthStore } from '@/store/authStore'
-
-const ASSISTANT_CONVERSATION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-export function isValidAssistantConversationId(value: unknown): value is string {
-  return typeof value === 'string' && ASSISTANT_CONVERSATION_ID_PATTERN.test(value)
-}
 
 export type AssistantSource =
   | 'APPLICATION_SEARCH'
@@ -61,7 +56,7 @@ async function request(
     credentials: 'include',
     signal,
     headers: {
-      Accept: 'text/event-stream',
+      Accept: 'text/event-stream, application/problem+json, application/json',
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
@@ -84,7 +79,27 @@ export async function streamAssistantMessage(
     const token = await refreshAccessToken()
     response = await request(conversationId, message, signal, token)
   }
-  if (!response.ok) throw new AssistantRequestError('Assistant request failed', response.status)
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
+  if (!response.ok) {
+    let message = 'Assistant request failed'
+    if (contentType.includes('application/problem+json') || contentType.includes('application/json')) {
+      try {
+        const payload = await response.json() as {
+          detail?: unknown
+          message?: unknown
+          error?: unknown
+        }
+        const candidate = payload.detail ?? payload.message ?? payload.error
+        if (typeof candidate === 'string' && candidate.trim()) message = candidate
+      } catch {
+        // Preserve the generic request error when an error response has an invalid JSON body.
+      }
+    }
+    throw new AssistantRequestError(message, response.status)
+  }
+  if (!contentType.includes('text/event-stream')) {
+    throw new AssistantRequestError('Assistant response is not an SSE stream', response.status)
+  }
   if (!response.body) throw new AssistantRequestError('Assistant response stream unavailable', response.status)
 
   let providerError: AssistantStreamError | null = null
